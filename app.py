@@ -36,7 +36,7 @@ nodos_default = pd.DataFrame({
     "Restringido_Y": [True, False, True],
     "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v10", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v11", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -48,7 +48,7 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v10", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v11", use_container_width=True)
 
 # --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
@@ -56,7 +56,7 @@ cargas_default = pd.DataFrame({
     "Barra": [1, 2],
     "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v10", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v11", use_container_width=True)
 
 st.markdown("---")
 
@@ -188,10 +188,10 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS DINÁMICOS", use_contain
             })
 
         st.balloons()
-        st.success("¡Cálculo estructural y diagramas basados en matriz completados!")
+        st.success("¡Cálculo estructural y diagramas completados con éxito!")
 
         tab1, tab2, tab3, tab4 = st.tabs([
-            "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 Diagramas Geométricos Dinámicos"
+            "📉 Desplazamientos", "⚖️️ Reacciones", "🔗 Fuerzas Internas", "🎨 Diagramas Geométricos"
         ])
         
         with tab1:
@@ -221,7 +221,7 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS DINÁMICOS", use_contain
             st.dataframe(pd.DataFrame(fi_clean), hide_index=True, use_container_width=True)
 
         with tab4:
-            st.write("**🎨 Diagramas Generados Dinámicamente a partir de los Cálculos Matriciales**")
+            st.write("**🎨 Diagramas Generados Dinámicamente**")
             
             fig, axes = plt.subplots(1, 3, figsize=(16, 5))
             fig.patch.set_facecolor('#0f172a')
@@ -229,7 +229,6 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS DINÁMICOS", use_contain
             
             for idx, ax in enumerate(axes):
                 ax.set_facecolor('#1e293b')
-                # Dibujar estructura base del pórtico
                 for el in elementos_info:
                     ax.plot([el["x1"], el["x2"]], [el["y1"], el["y2"]], color='#94a3b8', lw=4, zorder=3)
                 ax.set_title(titles[idx], color='white', fontweight='bold', fontsize=12)
@@ -237,27 +236,39 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS DINÁMICOS", use_contain
                 ax.set_ylim(-1.0, 5.5)
                 ax.axis('off')
 
-            # Extraer valores calculados para graficar con precisión
-            # Barra 1 (Columna): f_local[2] = Momento ini, f_local[5] = Momento fin, f_local[1] = Cortante ini, f_local[4] = Cortante fin, f_local[0] = Axial ini
-            # Barra 2 (Viga): f_local[2] = Momento ini, f_local[5] = Momento fin, etc.
             f1 = fuerzas_internas[0]["f_local"]
             f2 = fuerzas_internas[1]["f_local"]
 
-            # --- 1. MOMENTO FLECTOR DINÁMICO ---
-            # Columna (Barra 1): de f1[2] a f1[5]
-            axes[0].plot([0, 0], [0, 4], color='#94a3b8', lw=4, zorder=3)
+            # 1. Momento Flector
             axes[0].fill_betweenx([0, 4], [0, 0], [0, -f1[5]/3.0], color='#f43f5e', alpha=0.35)
             axes[0].plot([0, -f1[5]/3.0], [0, 4], color='#f43f5e', lw=2)
             axes[0].text(-1.5, 3.5, f"{abs(f1[5]):.2f}", color='#fca5a5', fontsize=9, fontweight='bold')
 
-            # Viga (Barra 2): de f2[2] a f2[5] con efecto de carga distribuida w=3
-            axes[0].plot([0, 4], [4, 4], color='#94a3b8', lw=4, zorder=3)
             axes[0].fill_between([0, 4], [4, 4], [4.5 + abs(f2[2])/10, 4.5 + abs(f2[5])/10], color='#f43f5e', alpha=0.35)
             axes[0].plot([0, 4], [4.5 + abs(f2[2])/10, 4.5 + abs(f2[5])/10], color='#f43f5e', lw=2)
             axes[0].text(3.5, 5.2, f"{abs(f2[5]):.3f} Tn.m", color='#fca5a5', fontsize=9, fontweight='bold')
 
-            # --- 2. ESFUERZO CORTANTE DINÁMICO ---
+            # 2. Cortante
             axes[1].fill_betweenx([0, 4], [0, 0], [0, f1[1]/3.0], color='#38bdf8', alpha=0.35)
             axes[1].plot([0, f1[1]/3.0], [0, 4], color='#38bdf8', lw=2)
             axes[1].text(0.5, 0.5, f"{f1[1]:.2f} Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
-            axes[1].text
+            axes[1].text(0.5, 3.5, f"{f1[4]:.2f} Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
+
+            axes[1].fill_between([0, 4], [4, 4], [4 + f2[1]/4.0, 4 - abs(f2[4])/4.0], color='#38bdf8', alpha=0.35)
+            axes[1].plot([0, 4], [4 + f2[1]/4.0, 4 - abs(f2[4])/4.0], color='#38bdf8', lw=2)
+            axes[1].text(3.5, 3.2, f"{abs(f2[4]):.2f} Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
+
+            # 3. Axial
+            axes[2].fill_betweenx([0, 4], [0, 0], [0, -abs(f1[0])/4.0], color='#10b981', alpha=0.35)
+            axes[2].plot([0, -abs(f1[0])/4.0], [0, 4], color='#10b981', lw=2)
+            axes[2].text(-1.5, 2.0, f"{abs(f1[0]):.2f} Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
+
+            axes[2].fill_between([0, 4], [4, 4], [4 + abs(f2[0])/4.0, 4 + abs(f2[3])/4.0], color='#10b981', alpha=0.35)
+            axes[2].plot([0, 4], [4 + abs(f2[0])/4.0, 4 + abs(f2[3])/4.0], color='#10b981', lw=2)
+            axes[2].text(1.8, 4.8, f"{abs(f2[0]):.2f} Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
+
+            st.pyplot(fig)
+            st.info("💡 Gráficos dinámicos actualizados correctamente.")
+
+    except Exception as e:
+        st.error(f"❌ Error en el cálculo estructural: {e}")
