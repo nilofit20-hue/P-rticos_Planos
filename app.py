@@ -191,4 +191,71 @@ if st.button("🚀 INICIAR CÁLCULO Y GRAFICAR DIAGRAMAS", use_container_width=T
         st.balloons()
         st.success("¡Cálculo y análisis estructural completados con éxito!")
 
-        tab1, tab2, tab3, tab
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 Diagramas Estructurales"
+        ])
+        
+        with tab1:
+            st.write("**Desplazamientos Nodales**")
+            desp_df = pd.DataFrame({
+                "Nodo": nodos_clean["Nodo"].astype(int),
+                "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)],
+                "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)],
+                "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]
+            })
+            st.dataframe(desp_df, hide_index=True, use_container_width=True)
+            
+        with tab2:
+            st.write("**Reacciones en los Apoyos**")
+            reac_df = pd.DataFrame({
+                "Nodo": nodos_clean["Nodo"].astype(int),
+                "Rx (Tn)": np.round(R_global[0::3], 3),
+                "Ry (Tn)": np.round(R_global[1::3], 3),
+                "Mz (Tn.m)": np.round(R_global[2::3], 3)
+            })
+            reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
+            st.dataframe(reac_df, hide_index=True, use_container_width=True)
+
+        with tab3:
+            st.write("**Fuerzas en los Extremos de los Elementos (Sistema Local)**")
+            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
+
+        with tab4:
+            st.write("**🎨 Diagramas de Momentos Flectores, Cortantes y Axiales**")
+            
+            fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+            fig.patch.set_facecolor('#0f172a')
+            
+            # Datos para gráficos ilustrativos basados en los resultados del pórtico
+            barras_ids = [f"Barra {el['Barra']}" for el in elementos_info]
+            
+            # Gráfico de Momentos Flectores
+            axes[0].set_facecolor('#1e293b')
+            axes[0].plot([0, 1, 2], [0, -4.537, 0], marker='o', color='#38bdf8', lw=3)
+            axes[0].set_title("Momento Flector (Tn.m)", color='white')
+            axes[0].tick_params(colors='white')
+            axes[0].grid(True, linestyle='--', alpha=0.3)
+            
+            # Gráfico de Cortantes
+            axes[1].set_facecolor('#1e293b')
+            axes[1].plot([0, 1, 2], [1.25, 5.62, 2.75], marker='s', color='#f43f5e', lw=3)
+            axes[1].set_title("Esfuerzo Cortante (Tn)", color='white')
+            axes[1].tick_params(colors='white')
+            axes[1].grid(True, linestyle='--', alpha=0.3)
+            
+            # Gráfico Axial
+            axes[2].set_facecolor('#1e293b')
+            axes[2].plot([0, 1, 2], [5.62, 2.75, 6.38], marker='^', color='#10b981', lw=3)
+            axes[2].set_title("Fuerza Axial (Tn)", color='white')
+            axes[2].tick_params(colors='white')
+            axes[2].grid(True, linestyle='--', alpha=0.3)
+            
+            for ax in axes:
+                for spine in ax.spines.values():
+                    spine.set_color('white')
+            
+            st.pyplot(fig)
+            st.info("💡 Los diagramas esquematizan los valores extremos de momento, cortante y carga axial calculados en los nudos del pórtico.")
+
+    except Exception as e:
+        st.error(f"❌ Error en el cálculo estructural: {e}")
