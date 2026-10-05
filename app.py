@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="SYNCRET - Pórticos Planos", page_icon="🏛️", layout="wide")
 
-# --- ESTILOS VISUALES ---
 st.markdown("""
 <style>
     .block-container { padding-top: 1rem !important; }
@@ -23,7 +21,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛️ SYNCRET: Análisis Matricial de Pórticos Planos</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛️️ SYNCRET: Análisis Matricial de Pórticos Planos</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #93c5fd;'>Método de Rigideces • Análisis Estructural II • UNS</p>", unsafe_allow_html=True)
 st.markdown("---")
 
@@ -35,9 +33,9 @@ nodos_default = pd.DataFrame({
     "Y (m)": [0.0, 4.0, 4.0],
     "Restringido_X": [True, False, True],
     "Restringido_Y": [True, False, True],
-    "Restringido_Giro": [False, False, True] # Apoyo 1 articulado (giro libre), Apoyo 3 empotrado
+    "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v2", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -49,15 +47,15 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v2", use_container_width=True)
 
-# --- CARGAS DISTRIBUIDAS EN BARRAS ---
+# --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
 cargas_default = pd.DataFrame({
     "Barra": [1, 2],
-    "w_axial/lateral (Tn/m)": [1.0, 3.0] # Columna 1 Tn/m lateral, Viga 3 Tn/m vertical
+    "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v2", use_container_width=True)
 
 st.markdown("---")
 
@@ -67,10 +65,9 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
         
         n_nodos = len(nodos_clean)
-        n_gdl = 3 * n_nodos # 3 GDL por nodo: u, v, theta
+        n_gdl = 3 * n_nodos
         nodo_idx = {int(row["Nodo"]): i for i, row in nodos_clean.iterrows()}
         
-        # Ensamblaje de restricciones
         gdl_restringidos = []
         for i, row in nodos_clean.iterrows():
             idx = nodo_idx[row["Nodo"]]
@@ -81,7 +78,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
         gdl_libres = [i for i in range(n_gdl) if i not in gdl_restringidos]
         
         K_global = np.zeros((n_gdl, n_gdl))
-        F_vector = np.zeros(n_gdl)
+        F_equivalente_global = np.zeros(n_gdl)
         
         elementos_info = []
         
@@ -97,7 +94,6 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             dy = n2["Y (m)"] - n1["Y (m)"]
             L = np.sqrt(dx**2 + dy**2)
             
-            # Ángulo de inclinación del elemento respecto al eje X global
             cos_phi = dx / L
             sin_phi = dy / L
             
@@ -110,24 +106,19 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             ae_l = (A * E) / L
             ei = E * I
             
-            # Coeficientes de rigidez local (Flexión y Axial - Omitiendo corte según teoría clásica)[cite: 19, 20]
             k11 = ae_l
             k22 = 12.0 * ei / L**3
             k23 = 6.0 * ei / L**2
             k33 = 4.0 * ei / L
             k36 = 2.0 * ei / L
             
-            # Matriz Local 6x6
             K_L = np.zeros((6, 6))
-            K_L[0,0] = k11; K_L[0,3] = -k11
-            K_L[3,0] = -k11; K_L[3,3] = k11
-            
+            K_L[0,0] = k11; K_L[0,3] = -k11; K_L[3,0] = -k11; K_L[3,3] = k11
             K_L[1,1] = k22; K_L[1,2] = k23; K_L[1,4] = -k22; K_L[1,5] = k23
             K_L[2,1] = k23; K_L[2,2] = k33; K_L[2,4] = -k23; K_L[2,5] = k36
             K_L[4,1] = -k22; K_L[4,2] = -k23; K_L[4,4] = k22; K_L[4,5] = -k23
             K_L[5,1] = k23; K_L[5,2] = k36; K_L[5,4] = -k23; K_L[5,5] = k33
             
-            # Matriz de Transformación Tg (6x6)[cite: 25]
             c = cos_phi
             s = sin_phi
             Tg = np.array([
@@ -139,10 +130,8 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
                 [ 0,  0, 0,  0,  0, 1]
             ])
             
-            # Matriz Global del Elemento[cite: 27]
             K_g_elem = Tg.T @ K_L @ Tg
             
-            # Ensamblaje en la Matriz Global
             idx1 = nodo_idx[n1_id]
             idx2 = nodo_idx[n2_id]
             gdl_elem = [3*idx1, 3*idx1+1, 3*idx1+2, 3*idx2, 3*idx2+1, 3*idx2+2]
@@ -151,27 +140,40 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
                 for j in range(6):
                     K_global[gdl_elem[i], gdl_elem[j]] += K_g_elem[i, j]
                     
-            elementos_info.append({"Barra": b_id, "L": L, "AE/L": ae_l, "EI": ei})
+            # Vector de fuerzas de empotramiento perfecto local (Fe) para carga w transversal uniforme
+            w_val = cargas_df[cargas_df["Barra"] == b_id]["w (Tn/m)"].values[0]
+            # En coordenadas locales del elemento: Cortante = wL/2, Momento = wL^2/12
+            Fe_local = np.array([
+                0.0,
+                (w_val * L) / 2.0,
+                (w_val * L**2) / 12.0,
+                0.0,
+                (w_val * L) / 2.0,
+                -(w_val * L**2) / 12.0
+            ])
+            
+            # Transformar Fe al sistema global y sumar al vector equivalente
+            Fe_global = Tg.T @ Fe_local
+            for i in range(6):
+                F_equivalente_global[gdl_elem[i]] += Fe_global[i]
+                
+            elementos_info.append({"Barra": b_id, "L": L, "w": w_val})
 
-        # --- RESOLUCIÓN MATRICIAL ---
+        # --- RESOLUCIÓN MATRICIAL CON FE ---
         K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
+        F_LL = -F_equivalente_global[gdl_libres] # Efecto de empotramiento pasa al otro lado de la ecuación
         
-        # Cargas nodales equivalentes o vector de fuerzas libres
-        F_LL = F_vector[gdl_libres]
-        
-        # Desplazamientos en GDL libres
         U_libres = np.linalg.pinv(K_LL) @ F_LL
         
         U_global = np.zeros(n_gdl)
         U_global[gdl_libres] = U_libres
         
-        # Reacciones[cite: 31, 46]
-        R_global = K_global @ U_global
+        R_global = K_global @ U_global + F_equivalente_global
 
         st.balloons()
-        st.success("¡Cálculo del pórtico plano procesado correctamente!")
+        st.success("¡Cálculo del pórtico con cargas distribuidas procesado con éxito!")
 
-        tab1, tab2, tab3 = st.tabs(["📉 Desplazamientos Nodales", "⚖️ Reacciones en Apoyos", "📋 Propiedades Geométricas"])
+        tab1, tab2, tab3 = st.tabs(["📉 Desplazamientos Nodales", "⚖️ Reacciones en Apoyos", "📋 Resumen de Cargas"])
         
         with tab1:
             st.write("**Desplazamientos Nodales del Pórtico**")
@@ -195,7 +197,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             st.dataframe(reac_df, hide_index=True, use_container_width=True)
 
         with tab3:
-            st.write("**Resumen de Elementos Estructurales**")
+            st.write("**Elementos y Cargas Aplicadas**")
             st.dataframe(pd.DataFrame(elementos_info), hide_index=True, use_container_width=True)
 
     except Exception as e:
