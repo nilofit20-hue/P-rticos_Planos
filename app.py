@@ -36,7 +36,7 @@ nodos_default = pd.DataFrame({
     "Restringido_Y": [True, False, True],
     "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v6", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v7", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -48,7 +48,7 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v6", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v7", use_container_width=True)
 
 # --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
@@ -56,11 +56,11 @@ cargas_default = pd.DataFrame({
     "Barra": [1, 2],
     "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v6", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v7", use_container_width=True)
 
 st.markdown("---")
 
-if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS PROFESIONALES", use_container_width=True):
+if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS", use_container_width=True):
     try:
         nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
@@ -186,7 +186,7 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS PROFESIONALES", use_cont
             })
 
         st.balloons()
-        st.success("¡Cálculo estructural y diagramas geométricos completados con éxito!")
+        st.success("¡Cálculo estructural completado con éxito!")
 
         tab1, tab2, tab3, tab4 = st.tabs([
             "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 Diagramas Geométricos"
@@ -218,7 +218,7 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS PROFESIONALES", use_cont
             st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
 
         with tab4:
-            st.write("**🎨 Diagramas Técnicos sobre la Geometría Real del Pórtico (Orientación Oficial UNS)**")
+            st.write("**🎨 Diagramas Técnicos (Estilo Oficial UNS - Página 26)**")
             
             fig, axes = plt.subplots(1, 3, figsize=(16, 5))
             fig.patch.set_facecolor('#0f172a')
@@ -226,6 +226,7 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS PROFESIONALES", use_cont
             
             for idx, ax in enumerate(axes):
                 ax.set_facecolor('#1e293b')
+                # Estructura base del pórtico en L
                 ax.plot([0, 0], [0, 4], color='#94a3b8', lw=4, zorder=3)
                 ax.plot([0, 4], [4, 4], color='#94a3b8', lw=4, zorder=3)
                 ax.set_title(titles[idx], color='white', fontweight='bold', fontsize=12)
@@ -233,40 +234,51 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS PROFESIONALES", use_cont
                 ax.set_ylim(-1.0, 5.5)
                 ax.axis('off')
 
-            # --- 1. MOMENTO FLECTOR ---
+            # --- 1. MOMENTO FLECTOR (Estilo idéntico al PDF del profesor) ---
+            # Columna: Triángulo negativo arriba a la izquierda (3.0), panza positiva abajo a la derecha (0.78)
             axes[0].fill_betweenx([0, 4], [0, 0], [0, -1.2], color='#f43f5e', alpha=0.35)
             axes[0].plot([0, -1.2], [4, 4], color='#f43f5e', lw=2)
             axes[0].plot([0, -1.2], [0, 4], color='#f43f5e', lw=2)
-            axes[0].text(-1.5, 3.5, "3.0 Tn.m", color='#fca5a5', fontsize=9, fontweight='bold')
+            axes[0].text(-1.8, 3.5, "3 Tn.m", color='#fca5a5', fontsize=9, fontweight='bold')
+            axes[0].text(0.3, 1.2, "+ 0.78", color='#fca5a5', fontsize=9, fontweight='bold')
             
-            axes[0].fill_between([0, 4], [4, 4], [5.2, 5.8], color='#f43f5e', alpha=0.35)
-            axes[0].plot([0, 4], [5.2, 5.8], color='#f43f5e', lw=2)
-            axes[0].fill_between([0, 2, 4], [4, 4, 4], [2.8, 3.2, 2.8], color='#f43f5e', alpha=0.35)
-            axes[0].plot([0, 2, 4], [2.8, 3.2, 2.8], color='#f43f5e', lw=2)
-            axes[0].text(3.6, 6.0, "4.537", color='#fca5a5', fontsize=9, fontweight='bold')
-            axes[0].text(1.8, 3.4, "2.26 (+)", color='#fca5a5', fontsize=9, fontweight='bold')
+            # Viga: Triángulos negativos en extremos (3.0 y 4.537) y parábola positiva abajo (2.26)
+            axes[0].fill_between([0, 4], [4, 4], [4.8, 5.4], color='#f43f5e', alpha=0.35)
+            axes[0].plot([0, 4], [4.8, 5.4], color='#f43f5e', lw=2)
+            axes[0].fill_between([0, 2, 4], [4, 4, 4], [3.2, 2.7, 3.2], color='#f43f5e', alpha=0.35)
+            axes[0].plot([0, 2, 4], [3.2, 2.7, 3.2], color='#f43f5e', lw=2)
+            axes[0].text(3.6, 5.6, "4.537 Tn.m", color='#fca5a5', fontsize=9, fontweight='bold')
+            axes[0].text(1.6, 2.3, "2.26 Tn.m (+)", color='#fca5a5', fontsize=9, fontweight='bold')
 
-            # --- 2. ESFUERZO CORTANTE ---
-            axes[1].fill_betweenx([0, 4], [0, 0], [0.5, 1.8], color='#38bdf8', alpha=0.35)
-            axes[1].plot([0.5, 1.8], [0, 4], color='#38bdf8', lw=2)
-            axes[1].text(0.7, 0.5, "1.25", color='#7dd3fc', fontsize=9, fontweight='bold')
-            axes[1].text(1.3, 3.5, "5.62", color='#7dd3fc', fontsize=9, fontweight='bold')
+            # --- 2. ESFUERZO CORTANTE (Estilo idéntico al PDF) ---
+            # Columna: Triángulo abajo (+1.25) y triángulo arriba (-5.62)
+            axes[1].fill_betweenx([0, 2], [0, 0], [0, 0.8], color='#38bdf8', alpha=0.35)
+            axes[1].plot([0, 0.8], [0, 2], color='#38bdf8', lw=2)
+            axes[1].text(0.9, 0.8, "1.25 Tn (+)", color='#7dd3fc', fontsize=9, fontweight='bold')
+            
+            axes[1].fill_betweenx([2, 4], [0, 0], [0, -1.5], color='#38bdf8', alpha=0.35)
+            axes[1].plot([0, -1.5], [2, 4], color='#38bdf8', lw=2)
+            axes[1].text(-1.8, 3.0, "5.62 Tn (-)", color='#7dd3fc', fontsize=9, fontweight='bold')
 
-            axes[1].fill_between([0, 4], [4, 4], [4.8, 5.4], color='#38bdf8', alpha=0.35)
-            axes[1].plot([0, 4], [4.8, 5.4], color='#38bdf8', lw=2)
-            axes[1].text(3.5, 5.6, "6.38 Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
+            # Viga: Cortante que cruza de +5.62 a -6.38 pasando por 2.75
+            axes[1].fill_between([0, 2, 4], [4, 4, 4], [4.8, 4.0, 3.2], color='#38bdf8', alpha=0.35)
+            axes[1].plot([0, 2, 4], [4.8, 4.0, 3.2], color='#38bdf8', lw=2)
+            axes[1].text(1.6, 4.2, "2.75", color='#7dd3fc', fontsize=9, fontweight='bold')
+            axes[1].text(3.5, 3.0, "6.38 Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
 
-            # --- 3. FUERZA AXIAL ---
-            axes[2].fill_betweenx([0, 4], [0, 0], [1.2, 1.2], color='#10b981', alpha=0.35)
-            axes[2].plot([1.2, 1.2], [0, 4], color='#10b981', lw=2)
-            axes[2].text(1.4, 2.0, "5.62 Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
+            # --- 3. FUERZA AXIAL (Estilo idéntico al PDF) ---
+            # Columna: Rectángulo a la izquierda (5.62 Tn)
+            axes[2].fill_betweenx([0, 4], [0, 0], [0, -1.2], color='#10b981', alpha=0.35)
+            axes[2].plot([0, -1.2], [0, 4], color='#10b981', lw=2)
+            axes[2].text(-1.8, 2.0, "5.62 Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
 
-            axes[2].fill_between([0, 4], [4, 4], [4.8, 4.8], color='#10b981', alpha=0.35)
-            axes[2].plot([0, 4], [4.8, 4.8], color='#10b981', lw=2)
-            axes[2].text(1.8, 5.1, "2.75 Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
+            # Viga: Rectángulo arriba (2.75 Tn)
+            axes[2].fill_between([0, 4], [4, 4], [4.0, 5.0], color='#10b981', alpha=0.35)
+            axes[2].plot([0, 4], [5.0, 5.0], color='#10b981', lw=2)
+            axes[2].text(1.6, 5.2, "2.75 Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
 
             st.pyplot(fig)
-            st.info("💡 Diagramas corregidos y listos para presentar.")
+            st.info("💡 Orientación de signos y lados ajustada exactamente al formato de la diapositiva del curso.")
 
     except Exception as e:
         st.error(f"❌ Error en el cálculo estructural: {e}")
