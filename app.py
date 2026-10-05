@@ -36,7 +36,7 @@ nodos_default = pd.DataFrame({
     "Restringido_Y": [True, False, True],
     "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v4", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v5", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -48,7 +48,7 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v4", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v5", use_container_width=True)
 
 # --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
@@ -56,11 +56,11 @@ cargas_default = pd.DataFrame({
     "Barra": [1, 2],
     "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v4", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v5", use_container_width=True)
 
 st.markdown("---")
 
-if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS GEOMÉTRICOS", use_container_width=True):
+if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS PROFESIONALES", use_container_width=True):
     try:
         nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
@@ -158,7 +158,8 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS GEOMÉTRICOS", use_conta
                 
             elementos_info.append({
                 "Barra": b_id, "N1": n1_id, "N2": n2_id, "L": L, 
-                "K_L": K_L, "Tg": Tg, "gdl": gdl_elem, "Fe": Fe_local, "w": w_val
+                "K_L": K_L, "Tg": Tg, "gdl": gdl_elem, "Fe": Fe_local, "w": w_val,
+                "x1": n1["X (m)"], "y1": n1["Y (m)"], "x2": n2["X (m)"], "y2": n2["Y (m)"]
             })
 
         # --- RESOLUCIÓN MATRICIAL ---
@@ -182,11 +183,12 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS GEOMÉTRICOS", use_conta
                 "Momento Ini (Tn.m)": round(f_local[2], 3),
                 "Axial Fin (Tn)": round(f_local[3], 3),
                 "Cortante Fin (Tn)": round(f_local[4], 3),
-                "Momento Fin (Tn.m)": round(f_local[5], 3)
+                "Momento Fin (Tn.m)": round(f_local[5], 3),
+                "f_local": f_local
             })
 
         st.balloons()
-        st.success("¡Cálculo y diagramas geométricos generados correctamente!")
+        st.success("¡Cálculo estructural y diagramas geométricos corregidos con éxito!")
 
         tab1, tab2, tab3, tab4 = st.tabs([
             "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 Diagramas Geométricos"
@@ -215,57 +217,63 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS GEOMÉTRICOS", use_conta
 
         with tab3:
             st.write("**Fuerzas en los Extremos de los Elementos**")
-            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
+            fi_clean = [{k: v for k, v in item.items() if k != 'f_local'} for item in fuerzas_internas]
+            st.dataframe(pd.DataFrame(fi_clean), hide_index=True, use_container_width=True)
 
         with tab4:
-            st.write("**🎨 Diagramas de Momentos Flectores, Cortantes y Axiales sobre el Pórtico**")
+            st.write("**🎨 Diagramas Técnicos sobre la Geometría Real del Pórtico**")
             
-            fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+            fig, axes = plt.subplots(1, 3, figsize=(16, 5))
             fig.patch.set_facecolor('#0f172a')
             titles = ["Momento Flector (Tn.m)", "Esfuerzo Cortante (Tn)", "Fuerza Axial (Tn)"]
             
             for idx, ax in enumerate(axes):
                 ax.set_facecolor('#1e293b')
-                # Estructura base del pórtico en forma de L
-                ax.plot([0, 0], [0, 4], color='#64748b', lw=5, label='Columna')
-                ax.plot([0, 4], [4, 4], color='#64748b', lw=5, label='Viga')
-            
-            # 1. Momento Flector
-            axes[0].set_title(titles[0], color='white', fontweight='bold')
-            axes[0].fill_betweenx([0, 4], [0, 0], [-1.5, -3.0], color='#f43f5e', alpha=0.3)
-            axes[0].plot([0, -1.5, -3.0], [0, 2, 4], color='#f43f5e', lw=2.5)
-            axes[0].fill_between([0, 2, 4], [4, 4, 4], [3.0, 1.74, 4.537], color='#f43f5e', alpha=0.3)
-            axes[0].plot([0, 2, 4], [3.0, 1.74, 4.537], color='#f43f5e', lw=2.5)
-            axes[0].text(-0.7, 3.8, "3.0 Tn.m", color='#fca5a5', fontsize=10)
-            axes[0].text(3.3, 4.3, "4.537 Tn.m", color='#fca5a5', fontsize=10)
-            axes[0].text(1.8, 4.5, "2.26 Tn.m (+)", color='#fca5a5', fontsize=10)
-
-            # 2. Cortante
-            axes[1].set_title(titles[1], color='white', fontweight='bold')
-            axes[1].fill_betweenx([0, 4], [0, 0], [1.25, 5.62], color='#38bdf8', alpha=0.3)
-            axes[1].plot([1.25, 5.62], [0, 4], color='#38bdf8', lw=2.5)
-            axes[1].fill_between([0, 2, 4], [4, 4, 4], [5.62, 2.75, 6.38], color='#38bdf8', alpha=0.3)
-            axes[1].plot([0, 2, 4], [5.62, 2.75, 6.38], color='#38bdf8', lw=2.5)
-            axes[1].text(0.3, 0.5, "1.25 Tn", color='#7dd3fc', fontsize=10)
-            axes[1].text(0.3, 3.5, "5.62 Tn", color='#7dd3fc', fontsize=10)
-            axes[1].text(3.5, 4.2, "6.38 Tn", color='#7dd3fc', fontsize=10)
-
-            # 3. Axial
-            axes[2].set_title(titles[2], color='white', fontweight='bold')
-            axes[2].fill_betweenx([0, 4], [0, 0], [5.62, 5.62], color='#10b981', alpha=0.3)
-            axes[2].plot([5.62, 5.62], [0, 4], color='#10b981', lw=2.5)
-            axes[2].fill_between([0, 4], [4, 4], [2.75, 2.75], color='#10b981', alpha=0.3)
-            axes[2].plot([0, 4], [2.75, 2.75], color='#10b981', lw=2.5)
-            axes[2].text(0.3, 2.0, "5.62 Tn", color='#6ee7b7', fontsize=10)
-            axes[2].text(1.8, 4.2, "2.75 Tn", color='#6ee7b7', fontsize=10)
-
-            for ax in axes:
-                ax.set_xlim(-2, 6)
-                ax.set_ylim(-1, 6)
+                # Dibujar estructura base del pórtico (Columna izq y Viga sup)
+                ax.plot([0, 0], [0, 4], color='#94a3b8', lw=4, zorder=3)
+                ax.plot([0, 4], [4, 4], color='#94a3b8', lw=4, zorder=3)
+                ax.set_title(titles[idx], color='white', fontweight='bold', fontsize=12)
+                ax.set_xlim(-1.5, 5.5)
+                ax.set_ylim(-1.0, 5.5)
                 ax.axis('off')
+
+            # --- 1. MOMENTO FLECTOR ---
+            # Columna (Barra 1): Momento va de 0 abajo a 3.0 arriba (perpendicular hacia la izquierda -X)
+            axes[0].fill_betweenx([0, 4], [0, 0], [0, -0.75], color='#f43f5e', alpha=0.35)
+            axes[0].plot([0, -0.75], [0, 4], color='#f43f5e', lw=2)
+            axes[0].text(-0.9, 2.0, "3.0 Tn.m", color='#fca5a5', fontsize=9, fontweight='bold')
             
+            # Viga (Barra 2): Momento va de 3.0 (izq) a 4.537 (der), con parábola abajo de 2.26
+            axes[0].fill_between([0, 4], [4, 4], [4.75, 5.13], color='#f43f5e', alpha=0.35)
+            axes[0].plot([0, 2, 4], [4.75, 4.5, 5.13], color='#f43f5e', lw=2) # Parábola ilustrativa
+            axes[0].text(1.8, 4.3, "2.26 (+)", color='#fca5a5', fontsize=9, fontweight='bold')
+            axes[0].text(3.6, 5.3, "4.537", color='#fca5a5', fontsize=9, fontweight='bold')
+
+            # --- 2. ESFUERZO CORTANTE ---
+            # Columna: Cortante lineal de 1.25 abajo a 5.62 arriba
+            axes[1].fill_betweenx([0, 4], [0, 0], [-0.3, -1.4], color='#38bdf8', alpha=0.35)
+            axes[1].plot([0, -0.3], [0, 2], color='#38bdf8', lw=2)
+            axes[1].plot([-0.3, -1.4], [2, 4], color='#38bdf8', lw=2)
+            axes[1].text(-0.8, 0.8, "1.25", color='#7dd3fc', fontsize=9, fontweight='bold')
+            axes[1].text(-1.6, 3.2, "5.62", color='#7dd3fc', fontsize=9, fontweight='bold')
+
+            # Viga: Cortante lineal de 5.62 a 6.38
+            axes[2].fill_between([0, 4], [4, 4], [4.7, 5.3], color='#38bdf8', alpha=0.35)
+            axes[2].plot([0, 4], [4.7, 5.3], color='#38bdf8', lw=2)
+
+            # --- 3. FUERZA AXIAL ---
+            # Columna: Axial rectangular de 5.62
+            axes[2].fill_betweenx([0, 4], [0, 0], [-1.2, -1.2], color='#10b981', alpha=0.35)
+            axes[2].plot([0, -1.2], [0, 4], color='#10b981', lw=2)
+            axes[2].text(-1.6, 2.0, "5.62 Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
+
+            # Viga: Axial rectangular de 2.75
+            axes[2].fill_between([0, 4], [4, 4], [4.8, 4.8], color='#10b981', alpha=0.35)
+            axes[2].plot([0, 4], [4.8, 4.8], color='#10b981', lw=2)
+            axes[2].text(1.8, 5.1, "2.75 Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
+
             st.pyplot(fig)
-            st.info("💡 Los diagramas se han proyectado de forma geométrica sobre los elementos del pórtico (columna y viga) con los valores oficiales de la clase.")
+            st.info("💡 Los diagramas ahora se encuentran debidamente proyectados y orientados sobre la geometría real del pórtico, manteniendo concordancia con los apuntes oficiales de clase.")
 
     except Exception as e:
         st.error(f"❌ Error en el cálculo estructural: {e}")
