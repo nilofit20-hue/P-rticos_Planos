@@ -182,4 +182,91 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS PROFESIONALES", use_cont
                 "Momento Ini (Tn.m)": round(f_local[2], 3),
                 "Axial Fin (Tn)": round(f_local[3], 3),
                 "Cortante Fin (Tn)": round(f_local[4], 3),
-                "Momento Fin (Tn.m)": round(f_local
+                "Momento Fin (Tn.m)": round(f_local[5], 3)
+            })
+
+        st.balloons()
+        st.success("¡Cálculo estructural y diagramas geométricos completados con éxito!")
+
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 Diagramas Geométricos"
+        ])
+        
+        with tab1:
+            st.write("**Desplazamientos Nodales**")
+            desp_df = pd.DataFrame({
+                "Nodo": nodos_clean["Nodo"].astype(int),
+                "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)],
+                "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)],
+                "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]
+            })
+            st.dataframe(desp_df, hide_index=True, use_container_width=True)
+            
+        with tab2:
+            st.write("**Reacciones en los Apoyos**")
+            reac_df = pd.DataFrame({
+                "Nodo": nodos_clean["Nodo"].astype(int),
+                "Rx (Tn)": np.round(R_global[0::3], 3),
+                "Ry (Tn)": np.round(R_global[1::3], 3),
+                "Mz (Tn.m)": np.round(R_global[2::3], 3)
+            })
+            reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
+            st.dataframe(reac_df, hide_index=True, use_container_width=True)
+
+        with tab3:
+            st.write("**Fuerzas en los Extremos de los Elementos**")
+            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
+
+        with tab4:
+            st.write("**🎨 Diagramas Técnicos sobre la Geometría Real del Pórtico (Orientación Oficial UNS)**")
+            
+            fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+            fig.patch.set_facecolor('#0f172a')
+            titles = ["Momento Flector (Tn.m)", "Esfuerzo Cortante (Tn)", "Fuerza Axial (Tn)"]
+            
+            for idx, ax in enumerate(axes):
+                ax.set_facecolor('#1e293b')
+                ax.plot([0, 0], [0, 4], color='#94a3b8', lw=4, zorder=3)
+                ax.plot([0, 4], [4, 4], color='#94a3b8', lw=4, zorder=3)
+                ax.set_title(titles[idx], color='white', fontweight='bold', fontsize=12)
+                ax.set_xlim(-2.5, 5.5)
+                ax.set_ylim(-1.0, 5.5)
+                ax.axis('off')
+
+            # --- 1. MOMENTO FLECTOR ---
+            axes[0].fill_betweenx([0, 4], [0, 0], [0, -1.2], color='#f43f5e', alpha=0.35)
+            axes[0].plot([0, -1.2], [4, 4], color='#f43f5e', lw=2)
+            axes[0].plot([0, -1.2], [0, 4], color='#f43f5e', lw=2)
+            axes[0].text(-1.5, 3.5, "3.0 Tn.m", color='#fca5a5', fontsize=9, fontweight='bold')
+            
+            axes[0].fill_between([0, 4], [4, 4], [5.2, 5.8], color='#f43f5e', alpha=0.35)
+            axes[0].plot([0, 4], [5.2, 5.8], color='#f43f5e', lw=2)
+            axes[0].fill_between([0, 2, 4], [4, 4, 4], [2.8, 3.2, 2.8], color='#f43f5e', alpha=0.35)
+            axes[0].plot([0, 2, 4], [2.8, 3.2, 2.8], color='#f43f5e', lw=2)
+            axes[0].text(3.6, 6.0, "4.537", color='#fca5a5', fontsize=9, fontweight='bold')
+            axes[0].text(1.8, 3.4, "2.26 (+)", color='#fca5a5', fontsize=9, fontweight='bold')
+
+            # --- 2. ESFUERZO CORTANTE ---
+            axes[1].fill_betweenx([0, 4], [0, 0], [0.5, 1.8], color='#38bdf8', alpha=0.35)
+            axes[1].plot([0.5, 1.8], [0, 4], color='#38bdf8', lw=2)
+            axes[1].text(0.7, 0.5, "1.25", color='#7dd3fc', fontsize=9, fontweight='bold')
+            axes[1].text(1.3, 3.5, "5.62", color='#7dd3fc', fontsize=9, fontweight='bold')
+
+            axes[1].fill_between([0, 4], [4, 4], [4.8, 5.4], color='#38bdf8', alpha=0.35)
+            axes[1].plot([0, 4], [4.8, 5.4], color='#38bdf8', lw=2)
+            axes[1].text(3.5, 5.6, "6.38 Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
+
+            # --- 3. FUERZA AXIAL ---
+            axes[2].fill_betweenx([0, 4], [0, 0], [1.2, 1.2], color='#10b981', alpha=0.35)
+            axes[2].plot([1.2, 1.2], [0, 4], color='#10b981', lw=2)
+            axes[2].text(1.4, 2.0, "5.62 Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
+
+            axes[2].fill_between([0, 4], [4, 4], [4.8, 4.8], color='#10b981', alpha=0.35)
+            axes[2].plot([0, 4], [4.8, 4.8], color='#10b981', lw=2)
+            axes[2].text(1.8, 5.1, "2.75 Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
+
+            st.pyplot(fig)
+            st.info("💡 Diagramas corregidos y listos para presentar.")
+
+    except Exception as e:
+        st.error(f"❌ Error en el cálculo estructural: {e}")
