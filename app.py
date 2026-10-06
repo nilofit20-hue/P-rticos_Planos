@@ -274,7 +274,7 @@ elif st.session_state.pagina == 'ej_1':
                 mostrar_img("cuerpo_libre_ej1", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
 # ==========================================
-# VISTA: EJERCICIO 02
+# VISTA: EJERCICIO 02 (Actualizado a 6 nudos y 5 barras)
 # ==========================================
 elif st.session_state.pagina == 'ej_2':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -294,17 +294,25 @@ elif st.session_state.pagina == 'ej_2':
             st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio 02", use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📍 Coordenadas Nodales y Restricciones")
+    st.subheader("📍 Coordenadas Nodales y Restricciones (6 Nudos)")
     nodos_default = pd.DataFrame({
-        "Nodo": [1, 2, 3, 4], "X (m)": [0.0, 1.0, 5.0, 6.0], "Y (m)": [0.0, 4.0, 4.0, 0.0],
-        "Restringido_X": [True, False, False, True], "Restringido_Y": [True, False, False, True], "Restringido_Giro": [True, False, False, True]
+        "Nodo": [1, 2, 3, 4, 5, 6],
+        "X (m)": [1.0, 0.0, 1.0, 5.0, 6.0, 5.0],
+        "Y (m)": [0.0, 4.0, 4.0, 4.0, 4.0, 0.0],
+        "Restringido_X": [True, False, False, False, False, True],
+        "Restringido_Y": [True, False, False, False, False, True],
+        "Restringido_Giro": [True, False, False, False, False, True]
     })
     nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ej2", use_container_width=True)
 
-    st.subheader("🔗 Conectividad y Propiedades de Elementos")
+    st.subheader("🔗 Conectividad y Propiedades de Elementos (5 Barras)")
     barras_default = pd.DataFrame({
-        "Barra": [1, 2, 3], "Nodo_Ini": [1, 2, 3], "Nodo_Fin": [2, 3, 4],
-        "Base (m)": [0.30, 0.30, 0.30], "Altura (m)": [0.50, 0.45, 0.50], "E (Tn/m2)": [2173706.5, 2173706.5, 2173706.5]
+        "Barra": [1, 2, 3, 4, 5],
+        "Nodo_Ini": [1, 2, 3, 4, 6],
+        "Nodo_Fin": [3, 3, 4, 5, 4],
+        "Base (m)": [0.30, 0.30, 0.30, 0.30, 0.30],
+        "Altura (m)": [0.50, 0.45, 0.45, 0.45, 0.50],
+        "E (Tn/m2)": [2173706.5, 2173706.5, 2173706.5, 2173706.5, 2173706.5]
     })
     barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ej2", use_container_width=True)
 
@@ -375,13 +383,15 @@ elif st.session_state.pagina == 'ej_2':
             
             Fe_local = np.zeros(6)
             if b_id == 1:
+                # Carga horizontal w = 2 Tn/m en la columna izq
                 wx = 2.0
                 f_horiz_total = wx * 4.0
                 Fe_local[0] = (f_horiz_total / 2.0) * c
                 Fe_local[1] = -(f_horiz_total / 2.0) * s
                 Fe_local[3] = (f_horiz_total / 2.0) * c
                 Fe_local[4] = -(f_horiz_total / 2.0) * s
-            elif b_id == 2:
+            elif b_id in [2, 3, 4]:
+                # Carga vertical w = 2 Tn/m en los elementos de la viga superior (voladizo izq, viga central, voladizo der)
                 wy = 2.0
                 Fe_local[1] = (wy * L) / 2.0
                 Fe_local[2] = (wy * L**2) / 12.0
@@ -420,7 +430,7 @@ elif st.session_state.pagina == 'ej_2':
                 Fe_local[1] = -(f_horiz_total / 2.0) * s
                 Fe_local[3] = (f_horiz_total / 2.0) * c
                 Fe_local[4] = -(f_horiz_total / 2.0) * s
-            elif b_id == 2:
+            elif b_id in [2, 3, 4]:
                 wy = 2.0
                 Fe_local[1] = (wy * L) / 2.0
                 Fe_local[2] = (wy * L**2) / 12.0
@@ -441,7 +451,7 @@ elif st.session_state.pagina == 'ej_2':
         ])
         
         with tab1:
-            st.subheader("📐 Resumen de Geometría y Elementos")
+            st.subheader("📐 Resumen de Geometría y Elementos (6 Nudos)")
             st.dataframe(nodos_df, hide_index=True, use_container_width=True)
             st.dataframe(barras_df, hide_index=True, use_container_width=True)
             st.markdown("---")
