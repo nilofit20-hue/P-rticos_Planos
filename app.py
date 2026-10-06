@@ -7,17 +7,50 @@ st.set_page_config(page_title="SYNCRET - Pórticos Planos", page_icon="🏛️",
 
 st.markdown("""
 <style>
-    .block-container { padding-top: 3.5rem !important; }
+    .block-container { padding-top: 3rem !important; }
     .stApp { 
         background: linear-gradient(rgba(9, 13, 22, 0.92), rgba(20, 27, 45, 0.95)), 
                     url('https://images.unsplash.com/photo-1541888946425-d0fbb18f248e?q=80&w=1920&auto=format&fit=crop');
         background-size: cover; background-position: center; background-attachment: fixed;
         color: #f7fafc;
     }
+    /* Estilo general para botones grandes y llamativos */
     .stButton button {
         background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
-        color: white !important; font-weight: bold !important; border-radius: 12px !important;
-        height: 55px !important; width: 100% !important; border: 2px solid rgba(255,255,255,0.3) !important;
+        color: white !important; font-weight: 700 !important; font-size: 16px !important;
+        border-radius: 12px !important; height: 60px !important; width: 100% !important; 
+        border: 2px solid rgba(255,255,255,0.3) !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        transition: all 0.3s ease;
+    }
+    .stButton button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+    }
+    /* Pestañas (Tabs) más grandes y visibles */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 12px;
+        justify-content: center;
+        background-color: rgba(15, 23, 42, 0.6);
+        padding: 10px;
+        border-radius: 12px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 55px;
+        background-color: #1e293b !important;
+        border-radius: 10px !important;
+        padding: 0 22px;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: #cbd5e1 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
+        color: white !important;
+        font-size: 17px !important;
+        border: 1px solid rgba(255,255,255,0.4) !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     }
     table { font-size: 13px !important; }
 </style>
@@ -34,38 +67,38 @@ def ir_a(menu):
 # PÁGINA PRINCIPAL / MENÚ DE SELECCIÓN
 # ==========================================
 if st.session_state.pagina == 'home':
-    st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 SYNCRET: Análisis Matricial de Pórticos Planos</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #93c5fd;'>Método de Rigideces • Análisis Estructural II • UNS</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown("<h1 style='text-align: center; color: #f7fafc; font-size: 2.8rem; margin-bottom: 0px;'>🏛 SYNCRET</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #93c5fd; font-size: 1.2rem; margin-top: 5px;'>Análisis Matricial de Pórticos Planos • Método de Rigideces • UNS</p>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     
     st.markdown("<h3 style='text-align: center; color: #f7fafc;'>📂 Selecciona el Ejercicio a Evaluar</h3>", unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3, gap="large")
-    
-    with col1:
+    # Botones centrados en una sola columna vertical
+    col_m1, col_m2, col_m3 = st.columns([1, 1.5, 1])
+    with col_m2:
         if st.button("📌 EJERCICIO 01", use_container_width=True):
             ir_a('ej_1')
             st.session_state.calc_ej1 = False
-            
-    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("📌 EJERCICIO 02", use_container_width=True):
             ir_a('ej_2')
             st.session_state.calc_ej2 = False
-            
-    with col3:
+        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("📌 EJERCICIO 03", use_container_width=True):
             ir_a('ej_3')
             st.session_state.calc_ej3 = False
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Valores Oficiales EngiLab)
+# VISTA: EJERCICIO 01
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
-    if st.button("⬅️ Volver al Menú Principal"):
-        ir_a('home')
-        st.rerun()
-        
+    col_b1, col_b2, col_b3 = st.columns([1, 2, 1])
+    with col_b2:
+        if st.button("⬅️ Volver al Menú Principal", use_container_width=True):
+            ir_a('home')
+            st.rerun()
+            
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 01</h1>", unsafe_allow_html=True)
     st.markdown("> **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS.")
 
@@ -266,10 +299,12 @@ elif st.session_state.pagina == 'ej_1':
 # VISTA: EJERCICIO 02
 # ==========================================
 elif st.session_state.pagina == 'ej_2':
-    if st.button("⬅️ Volver al Menú Principal"):
-        ir_a('home')
-        st.rerun()
-        
+    col_b1, col_b2, col_b3 = st.columns([1, 2, 1])
+    with col_b2:
+        if st.button("⬅️ Volver al Menú Principal", use_container_width=True):
+            ir_a('home')
+            st.rerun()
+            
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 02</h1>", unsafe_allow_html=True)
     st.markdown("> **ENUNCIADO:** PÓRTICO CON 6 NUDOS, COLUMNAS INCLINADAS Y VOLADIZOS.")
 
@@ -482,10 +517,12 @@ elif st.session_state.pagina == 'ej_2':
 # VISTA: EJERCICIO 03 (Resultados Oficiales EngiLab - 4 Nudos y 3 Barras con Pines)
 # ==========================================
 elif st.session_state.pagina == 'ej_3':
-    if st.button("⬅️ Volver al Menú Principal"):
-        ir_a('home')
-        st.rerun()
-        
+    col_b1, col_b2, col_b3 = st.columns([1, 2, 1])
+    with col_b2:
+        if st.button("⬅️ Volver al Menú Principal", use_container_width=True):
+            ir_a('home')
+            st.rerun()
+            
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 03</h1>", unsafe_allow_html=True)
     st.markdown("> **ENUNCIADO:** PÓRTICO CON 4 NUDOS, 3 BARRAS, APOYO FIJO EN 'A' Y MÓVIL EN 'D'.")
 
@@ -686,16 +723,8 @@ elif st.session_state.pagina == 'ej_3':
                 if p: st.image(p, use_container_width=True)
                 else: st.info(f"Sube `{base}.jpg` o `.png` a GitHub.")
             with g_col1:
-                mostrar_img3("modelo_ej3", "1. Modelo Geométrico y Cargas")
-                mostrar_img3("cortante_ej3", "3. Diagrama de Esfuerzo Cortante (V)")
-                mostrar_img3("deformacion_ej3", "5. Diagrama de Deformación")
-            with g_col2:
                 mostrar_img3("axial_ej3", "2. Diagrama de Fuerza Axial (N)")
                 mostrar_img3("momento_ej3", "4. Diagrama de Momento Flector (M)")
+            with g_col2:
+                mostrar_img3("cortante_ej3", "3. Diagrama de Esfuerzo Cortante (V)")
                 mostrar_img3("cuerpo_libre_ej3", "6. Diagrama de Cuerpo Libre (Reacciones)")
-
-# ==========================================
-# VISTA: EJERCICIO 03 (Menú Principal / Extensión)
-# ==========================================
-elif st.session_state.pagina == 'ej_3_extra':
-    pass
