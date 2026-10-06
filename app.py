@@ -274,7 +274,7 @@ elif st.session_state.pagina == 'ej_1':
                 mostrar_img("cuerpo_libre_ej1", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
 # ==========================================
-# VISTA: EJERCICIO 02 (Cálculo Automático Real con 6 Nudos y 5 Barras)
+# VISTA: EJERCICIO 02 (Cálculo Automático Real con Columnas Inclinadas)
 # ==========================================
 elif st.session_state.pagina == 'ej_2':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -282,7 +282,7 @@ elif st.session_state.pagina == 'ej_2':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 02</h1>", unsafe_allow_html=True)
-    st.markdown("> **ENUNCIADO:** PÓRTICO CON 6 NUDOS, COLUMNAS VERTICALES Y VOLADIZOS.")
+    st.markdown("> **ENUNCIADO:** PÓRTICO CON 6 NUDOS, COLUMNAS INCLINADAS Y VOLADIZOS.")
 
     if os.path.exists("enunciado_2.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
@@ -294,10 +294,10 @@ elif st.session_state.pagina == 'ej_2':
             st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio 02", use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📍 Coordenadas Nodales y Restricciones (6 Nudos)")
+    st.subheader("📍 Coordenadas Nodales y Restricciones (6 Nudos con Inclinación)")
     nodos_default = pd.DataFrame({
         "Nodo": [1, 2, 3, 4, 5, 6],
-        "X (m)": [1.0, 1.0, 0.0, 6.0, 5.0, 5.0],
+        "X (m)": [0.0, 0.0, 1.0, 5.0, 6.0, 6.0],
         "Y (m)": [0.0, 4.0, 4.0, 4.0, 4.0, 0.0],
         "Restringido_X": [True, False, False, False, False, True],
         "Restringido_Y": [True, False, False, False, False, True],
@@ -308,8 +308,8 @@ elif st.session_state.pagina == 'ej_2':
     st.subheader("🔗 Conectividad y Propiedades de Elementos (5 Barras)")
     barras_default = pd.DataFrame({
         "Barra": [1, 2, 3, 4, 5],
-        "Nodo_Ini": [1, 3, 2, 5, 6],
-        "Nodo_Fin": [2, 2, 5, 4, 5],
+        "Nodo_Ini": [1, 2, 3, 4, 6],
+        "Nodo_Fin": [3, 3, 4, 5, 4],
         "Base (m)": [0.30, 0.30, 0.30, 0.30, 0.30],
         "Altura (m)": [0.50, 0.45, 0.45, 0.45, 0.50],
         "E (Tn/m2)": [2173706.5, 2173706.5, 2173706.5, 2173706.5, 2173706.5]
@@ -383,15 +383,15 @@ elif st.session_state.pagina == 'ej_2':
             
             Fe_local = np.zeros(6)
             if b_id == 1:
-                # Carga lateral w_x = 2.0 en columna izquierda
+                # Carga horizontal w_x = 2.0 en la columna izquierda inclinada
                 wx = 2.0
-                f_horiz_total = wx * L
+                f_horiz_total = wx * 4.0
                 Fe_local[0] = (f_horiz_total / 2.0) * c
                 Fe_local[1] = -(f_horiz_total / 2.0) * s
                 Fe_local[3] = (f_horiz_total / 2.0) * c
                 Fe_local[4] = -(f_horiz_total / 2.0) * s
             elif b_id in [2, 3, 4]:
-                # Carga vertical w_y = 2.0 en elementos superiores (voladizos y viga central)
+                # Carga vertical w_y = 2.0 en elementos superiores
                 wy = 2.0
                 Fe_local[1] = (wy * L) / 2.0
                 Fe_local[2] = (wy * L**2) / 12.0
@@ -425,7 +425,7 @@ elif st.session_state.pagina == 'ej_2':
             Fe_local = np.zeros(6)
             if b_id == 1:
                 wx = 2.0
-                f_horiz_total = wx * L
+                f_horiz_total = wx * 4.0
                 Fe_local[0] = (f_horiz_total / 2.0) * c
                 Fe_local[1] = -(f_horiz_total / 2.0) * s
                 Fe_local[3] = (f_horiz_total / 2.0) * c
