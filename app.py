@@ -107,7 +107,7 @@ elif st.session_state.pagina == 'ej_prueba':
             with col2: st.image("axial.jpg", use_container_width=True) if os.path.exists("axial.jpg") else st.warning("Falta axial.jpg")
 
 # ==========================================
-# VISTA: EJERCICIO 01
+# VISTA: EJERCICIO 01 (Con matriz particionada y coloreada por bloques)
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -157,6 +157,15 @@ elif st.session_state.pagina == 'ej_1':
         n_nodos = len(nodos_clean)
         n_gdl = 3 * n_nodos
         nodo_idx = {int(row["Nodo"]): i for i, row in nodos_clean.iterrows()}
+        
+        gdl_restringidos = []
+        for i, row in nodos_clean.iterrows():
+            idx = nodo_idx[row["Nodo"]]
+            if row["Restringido_X"]: gdl_restringidos.append(3*idx)
+            if row["Restringido_Y"]: gdl_restringidos.append(3*idx + 1)
+            if row["Restringido_Giro"]: gdl_restringidos.append(3*idx + 2)
+            
+        gdl_libres = [i for i in range(n_gdl) if i not in gdl_restringidos]
         
         matrices_locales = {}
         matrices_globales = {}
@@ -251,8 +260,8 @@ elif st.session_state.pagina == 'ej_1':
                 "GDL Giro": [3*i+2 for i in range(n_nodos)]
             })
             st.dataframe(gdl_df, hide_index=True, use_container_width=True)
-            st.info("📌 **GDL Libres:** [3, 4, 5, 6, 7, 8]")
-            st.info("📌 **GDL Restringidos:** [0, 1, 2, 9, 10, 11]")
+            st.info(f"📌 **GDL Libres:** {gdl_libres}")
+            st.info(f"📌 **GDL Restringidos:** {gdl_restringidos}")
 
         with tab3:
             st.subheader("🧮 Matrices de Rigidez Local (k) por Elemento")
@@ -272,10 +281,37 @@ elif st.session_state.pagina == 'ej_1':
                 st.dataframe(df_kg, use_container_width=True)
 
         with tab5:
-            st.subheader("📊 Matriz de Rigidez Global de la Estructura (Ensamblada)")
-            st.markdown("Matriz de rigidez global del sistema de 12x12:")
-            df_K_global = pd.DataFrame(np.round(K_global, 2))
-            st.dataframe(df_K_global, use_container_width=True)
+            st.subheader("📊 Matriz Global del Sistema Particionada ($K_{LL}, K_{LR}, K_{RL}, K_{RR}$)")
+            st.markdown("""
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 14px; font-weight: bold;">
+                <div style="background-color: #1d4ed8; padding: 8px 15px; border-radius: 8px; color: white;">🟦 K_LL (Libres - Libres)</div>
+                <div style="background-color: #c2410c; padding: 8px 15px; border-radius: 8px; color: white;">🟧 K_LR / K_RL (Acoplamiento)</div>
+                <div style="background-color: #581c87; padding: 8px 15px; border-radius: 8px; color: white;">🟪 K_RR (Restringidos - Restringidos)</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Preparar etiquetas para filas y columnas
+            nombres_gdl = [f"GDL {i+1} ({'Libre' if i in gdl_libres else 'Rest.'})" for i in range(n_gdl)]
+            df_K_global = pd.DataFrame(np.round(K_global, 2), index=nombres_gdl, columns=nombres_gdl)
+
+            # Función para colorear bloques exactamente como en Armadura 3D
+            def color_blocks_partition(row):
+                styles = []
+                row_idx = row.name
+                # Extraer el índice numérico del GDL desde la etiqueta
+                i_gdl = int(row_idx.split()[1]) - 1
+                for col_name in row.index:
+                    j_gdl = int(col_name.split()[1]) - 1
+                    
+                    if i_gdl in gdl_libres and j_gdl in gdl_libres:
+                        styles.append('background-color: #1e3a8a; color: #93c5fd;') # Azul K_LL
+                    elif i_gdl in gdl_restringidos and j_gdl in gdl_restringidos:
+                        styles.append('background-color: #3b0764; color: #d8b4fe;') # Morado K_RR
+                    else:
+                        styles.append('background-color: #7c2d12; color: #fed7aa;') # Naranja/Marrón K_LR / K_RL
+                return styles
+
+            st.dataframe(df_K_global.style.apply(color_blocks_partition, axis=1), use_container_width=True)
 
         with tab6:
             st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados Oficiales EngiLab)")
