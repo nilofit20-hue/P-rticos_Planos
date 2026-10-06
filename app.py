@@ -26,10 +26,23 @@ st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 SYNCRET: Anál
 st.markdown("<p style='text-align: center; color: #93c5fd;'>Método de Rigideces • Análisis Estructural II • UNS</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# --- ENUNCIADO OFICIAL SOLICITADO ---
+# --- ENUNCIADO OFICIAL Y ESQUEMA DEL PROBLEMA ---
 st.markdown("""
 > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
 """)
+
+# Mostrar automáticamente la imagen del enunciado si está subida al repositorio
+if os.path.exists("enunciado.jpg"):
+    col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
+    with col_e2:
+        st.image("enunciado.jpg", caption="Esquema del Pórtico - Enunciado del Ejercicio", use_container_width=True)
+elif os.path.exists("enunciado.png"):
+    col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
+    with col_e2:
+        st.image("enunciado.png", caption="Esquema del Pórtico - Enunciado del Ejercicio", use_container_width=True)
+else:
+    st.warning("⚠️ Sube la imagen del enunciado nombrada como `enunciado.jpg` a tu repositorio de GitHub para que aparezca aquí.")
+
 st.markdown("---")
 
 # --- ENTRADA DE DATOS: NODOS ---
@@ -42,7 +55,7 @@ nodos_default = pd.DataFrame({
     "Restringido_Y": [True, False, True],
     "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v22", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v23", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -54,7 +67,7 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v22", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v23", use_container_width=True)
 
 # --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
@@ -62,7 +75,7 @@ cargas_default = pd.DataFrame({
     "Barra": [1, 2],
     "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v22", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v23", use_container_width=True)
 
 st.markdown("---")
 
@@ -192,7 +205,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             
             b_row = barras_clean[barras_clean["Barra"] == b_id].iloc[0]
             A = b_row["Base (m)"] * b_row["Altura (m)"]
-            I = (b_row["Base (m)"] * b_row["Altura (m)"]**3) / 12.0
+            I = (b_row["Base (m)"] * b_row["Altura (m)**3"]) / 12.0 if "Altura (m)**3" in b_row else (b_row["Base (m)"] * b_row["Altura (m)"]**3) / 12.0
             E = b_row["E (Tn/m2)"]
             ae_l, ei = (A * E) / L, E * I
             
@@ -236,7 +249,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
         st.balloons()
         st.success("¡Cálculo matricial procesado con éxito!")
 
-        # --- PESTAÑAS MODULARES SOLICITADAS ---
+        # --- PESTAÑAS MODULARES ---
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
             "📐 Geometría y Elementos", 
             "📋 Partición de GDL", 
@@ -307,7 +320,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
                 st.dataframe(reac_df, hide_index=True, use_container_width=True)
 
         with tab7:
-            st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas (Axial, Cortante y Momento)")
+            st.subheader("⚖️️ Equilibrio Estático y Fuerzas Internas (Axial, Cortante y Momento)")
             st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
 
         with tab8:
@@ -326,7 +339,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
                 if path:
                     st.image(path, use_container_width=True)
                 else:
-                    st.warning(f"⚠️ Falta subir el archivo `{nombre_base}.jpg` (o .png) al repositorio de GitHub.")
+                    st.warning(f"⚠️ Falta subir el archivo `{nombre_base}.jpg` al repositorio de GitHub.")
 
             with col1:
                 mostrar_imagen("modelo", "1. Modelo Geométrico y Cargas")
