@@ -709,4 +709,87 @@ elif st.session_state.pagina == 'ej_3':
             st.info(f"📌 **GDL Restringidos:** {gdl_restringidos}")
             
         with tab3:
-            st.subheader("🧮 Matrices
+            st.subheader("🧮 Matrices de Rigidez Local ($k$) por Elemento")
+            for bid, kmat in matrices_locales.items():
+                n_ini, n_fin = conexiones_elementos[bid]
+                ang = angulos_elementos[bid]
+                st.write(f"**Barra {bid} (Nodo {n_ini} ➔ Nodo {n_fin} | Ángulo $\\theta = {ang}°$):**")
+                st.dataframe(pd.DataFrame(np.round(kmat, 2)), use_container_width=True)
+                
+        with tab4:
+            st.subheader("🌐 Matrices de Rigidez Global ($Ke$) por Elemento")
+            for bid, kgmat in matrices_globales.items():
+                n_ini, n_fin = conexiones_elementos[bid]
+                ang = angulos_elementos[bid]
+                st.write(f"**Barra {bid} (Nodo {n_ini} ➔ Nodo {n_fin} | Ángulo $\\theta = {ang}°$):**")
+                st.dataframe(pd.DataFrame(np.round(kgmat, 2)), use_container_width=True)
+                
+        with tab5:
+            st.subheader("📊 Matriz Global del Sistema Particionada ($K_{LL}, K_{LR}, K_{RL}, K_{RR}$)")
+            st.markdown("""
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 14px; font-weight: bold;">
+                <div style="background-color: #1e3a8a; padding: 8px 15px; border-radius: 8px; color: #93c5fd;">🟦 K_LL (Libres - Libres)</div>
+                <div style="background-color: #7c2d12; padding: 8px 15px; border-radius: 8px; color: #fed7aa;">🟧 K_LR / K_RL (Acoplamiento)</div>
+                <div style="background-color: #3b0764; padding: 8px 15px; border-radius: 8px; color: #d8b4fe;">🟪 K_RR (Restringidos - Restringidos)</div>
+            </div>
+            """, unsafe_allow_html=True)
+            gdl_ordenados = gdl_libres + gdl_restringidos
+            K_part = K_global[np.ix_(gdl_ordenados, gdl_ordenados)]
+            nombres = [f"GDL {i+1} (Libre)" if i in gdl_libres else f"GDL {i+1} (Rest.)" for i in gdl_ordenados]
+            df_kp = pd.DataFrame(np.round(K_part, 2), index=nombres, columns=nombres)
+            def color_q(row):
+                r_l = "Libre" in row.name
+                return ['background-color: #1e3a8a; color: #93c5fd;' if r_l and "Libre" in c else ('background-color: #3b0764; color: #d8b4fe;' if not r_l and "Rest." in c else 'background-color: #7c2d12; color: #fed7aa;') for c in row.index]
+            st.dataframe(df_kp.style.apply(color_q, axis=1), use_container_width=True)
+            
+        with tab6:
+            st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados Oficiales)")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.write("**Desplazamientos Nodales:**")
+                desp_oficial_3 = pd.DataFrame({
+                    "Nodo": [1, 2, 3, 4],
+                    "Dx (m)": ["0.00000", "2.51689", "2.51689", "3.64790"],
+                    "Dy (m)": ["0.00000", "0.00014", "-0.00259", "0.00000"],
+                    "Giro (rad)": ["-0.59539", "-0.35003", "0.22620", "0.22620"]
+                })
+                st.dataframe(desp_oficial_3, hide_index=True, use_container_width=True)
+            with col_b:
+                st.write("**Reacciones en los Apoyos:**")
+                reac_oficial_3 = pd.DataFrame({
+                    "Nodo": [1, 4],
+                    "Fx (Tn)": [-20.00, 0.00],
+                    "Fy (Tn)": [-0.92, 16.92],
+                    "Mz (Tn.m)": [0.00, 0.00]
+                })
+                st.dataframe(reac_oficial_3, hide_index=True, use_container_width=True)
+                
+        with tab7:
+            st.subheader("⚖️ Equilibrio Estático y Fuerzas en Extremos de Elementos")
+            fuerzas_oficiales_3 = pd.DataFrame({
+                "Barra": [1, 1, 2, 2, 3, 3],
+                "Nodo ID": ["1 (A)", "2 (B)", "2 (B)", "3 (C)", "3 (C)", "4 (D)"],
+                "Axial (Tn)": [0.92, 0.92, 0.00, 0.00, -16.92, -16.92],
+                "Cortante (Tn)": [20.00, 0.00, -0.92, -16.92, 0.00, 0.00],
+                "Momento (Tn.m)": [0.00, 50.00, 50.00, 0.00, 0.00, 0.00]
+            })
+            st.dataframe(fuerzas_oficiales_3, hide_index=True, use_container_width=True)
+            
+        with tab8:
+            st.subheader("🎨 Galería de Diagramas - Ejercicio 03")
+            g_col1, g_col2 = st.columns(2)
+            def mostrar_img3(base, titulo):
+                p = None
+                for ext in [".jpg", ".png", ".jpeg"]:
+                    if os.path.exists(base + ext):
+                        p = base + ext
+                        break
+                st.markdown(f"**{titulo}**")
+                if p: st.image(p, use_container_width=True)
+                else: st.info(f"Sube `{base}.jpg` o `.png` a GitHub.")
+            with g_col1:
+                mostrar_img3("axial_ej3", "2. Diagrama de Fuerza Axial (N)")
+                mostrar_img3("momento_ej3", "4. Diagrama de Momento Flector (M)")
+            with g_col2:
+                mostrar_img3("cortante_ej3", "3. Diagrama de Esfuerzo Cortante (V)")
+                mostrar_img3("cuerpo_libre_ej3", "6. Diagrama de Cuerpo Libre (Reacciones)")
