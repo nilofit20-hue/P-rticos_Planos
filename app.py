@@ -107,7 +107,7 @@ elif st.session_state.pagina == 'ej_prueba':
             with col2: st.image("axial.jpg", use_container_width=True) if os.path.exists("axial.jpg") else st.warning("Falta axial.jpg")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Con partición de 4 bloques corregida)
+# VISTA: EJERCICIO 01 (Con imagen de enunciado y gráficos del Frame)
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -119,10 +119,13 @@ elif st.session_state.pagina == 'ej_1':
     > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
     """)
 
+    # Mostrar la imagen del enunciado del Ejercicio 01
     if os.path.exists("enunciado_1.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
         with col_e2:
             st.image("enunciado_1.jpg", caption="Esquema del Pórtico - Ejercicio 01", use_container_width=True)
+    else:
+        st.warning("⚠️ Sube la imagen del enunciado como `enunciado_1.jpg` a tu repositorio de GitHub para visualizarla aquí.")
 
     st.markdown("---")
 
@@ -290,15 +293,12 @@ elif st.session_state.pagina == 'ej_1':
             </div>
             """, unsafe_allow_html=True)
 
-            # Reordenar K_global agrupando primero los GDL Libres y luego los Restringidos
             gdl_ordenados = gdl_libres + gdl_restringidos
             K_particionada = K_global[np.ix_(gdl_ordenados, gdl_ordenados)]
 
-            # Crear etiquetas ordenadas
             nombres_gdl_ordenados = [f"GDL {i+1} (Libre)" if i in gdl_libres else f"GDL {i+1} (Rest.)" for i in gdl_ordenados]
             df_K_part = pd.DataFrame(np.round(K_particionada, 2), index=nombres_gdl_ordenados, columns=nombres_gdl_ordenados)
 
-            # Función de colores corregida utilizando .apply() con axis=1
             def color_cuadrantes(row):
                 styles = []
                 row_idx = row.name
@@ -308,11 +308,11 @@ elif st.session_state.pagina == 'ej_1':
                     es_libre_col = "Libre" in col_name
                     
                     if es_libre_fila and es_libre_col:
-                        styles.append('background-color: #1e3a8a; color: #93c5fd;') # Bloque K_LL (Azul)
+                        styles.append('background-color: #1e3a8a; color: #93c5fd;') # K_LL
                     elif not es_libre_fila and not es_libre_col:
-                        styles.append('background-color: #3b0764; color: #d8b4fe;') # Bloque K_RR (Morado)
+                        styles.append('background-color: #3b0764; color: #d8b4fe;') # K_RR
                     else:
-                        styles.append('background-color: #7c2d12; color: #fed7aa;') # Bloques K_LR / K_RL (Naranja/Marrón)
+                        styles.append('background-color: #7c2d12; color: #fed7aa;') # K_LR / K_RL
                 return styles
 
             st.dataframe(df_K_part.style.apply(color_cuadrantes, axis=1), use_container_width=True)
@@ -341,4 +341,48 @@ elif st.session_state.pagina == 'ej_1':
 
         with tab7:
             st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas (Fuerzas en Extremos)")
-            fuerzas_oficiales = pd
+            fuerzas_oficiales = pd.DataFrame({
+                "Barra": [1, 1, 2, 2, 3, 3],
+                "Extremo": ["Ini (1)", "Fin (2)", "Ini (2)", "Fin (3)", "Ini (3)", "Fin (4)"],
+                "Axial (Tn)": [-5.75, -5.75, -4.00, -4.00, -5.83, -5.83],
+                "Cortante (Tn)": [0.50, -4.00, 5.75, -4.25, 0.35, 0.35],
+                "Momento (Tn.m)": [1.61, -4.39, -5.39, -1.63, -1.63, -0.26]
+            })
+            st.dataframe(fuerzas_oficiales, hide_index=True, use_container_width=True)
+
+        with tab8:
+            st.subheader("🎨 Galería de Diagramas y Resultados Oficiales - Ejercicio 01")
+            col1, col2 = st.columns(2)
+            
+            def mostrar_img(base, titulo):
+                p = None
+                for ext in [".jpg", ".png", ".jpeg"]:
+                    if os.path.exists(base + ext):
+                        p = base + ext
+                        break
+                st.markdown(f"**{titulo}**")
+                if p: st.image(p, use_container_width=True)
+                else: st.warning(f"⚠ Sube `{base}.jpg` a tu repositorio de GitHub para mostrar el gráfico.")
+
+            with col1:
+                mostrar_img("modelo_ej1", "1. Modelo Geométrico y Cargas (Frame)")
+                mostrar_img("cortante_ej1", "3. Diagrama de Esfuerzo Cortante (V)")
+                mostrar_img("deformacion_ej1", "5. Diagrama de Deformación")
+            with col2:
+                mostrar_img("axial_ej1", "2. Diagrama de Fuerza Axial (N)")
+                mostrar_img("momento_ej1", "4. Diagrama de Momento Flector (M)")
+                mostrar_img("cuerpo_libre_ej1", "6. Diagrama de Cuerpo Libre (Reacciones)")
+
+# ==========================================
+# VISTAS DE LOS EJERCICIOS 02 Y 03
+# ==========================================
+elif st.session_state.pagina in ['ej_2', 'ej_3']:
+    if st.button("⬅️ Volver al Menú Principal"):
+        ir_a('home')
+        st.rerun()
+        
+    st.markdown(f"<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO {st.session_state.pagina[-1].upper()}</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
+    """)
+    st.info("🚧 Este ejercicio está configurado en la estructura del menú. Solo indícame sus datos cuando estés listo para programarlo.")
