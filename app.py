@@ -49,10 +49,12 @@ if st.session_state.pagina == 'home':
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("📌 EJERCICIO 02", use_container_width=True):
             ir_a('ej_2')
+            st.session_state.calc_ej2 = False
             
     with col2:
         if st.button("📌 EJERCICIO 01", use_container_width=True):
             ir_a('ej_1')
+            st.session_state.calc_ej1 = False
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("📌 EJERCICIO 03", use_container_width=True):
             ir_a('ej_3')
@@ -68,7 +70,7 @@ elif st.session_state.pagina == 'ej_prueba':
     st.info("Configurado para pruebas internas.")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Cálculo Automático Completo)
+# VISTA: EJERCICIO 01 (Con Session State Persistente)
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -102,7 +104,10 @@ elif st.session_state.pagina == 'ej_1':
 
     st.markdown("---")
 
-    if st.button("🚀 INICIAR CÁLCULO MATRICIAL AUTOMÁTICO - EJERCICIO 01", use_container_width=True):
+    if st.button("🚀 INICIAR CÁLCULO MATRICIAL AUTOMÁTICO - EJERCICIO 01", key="btn_ej1"):
+        st.session_state.calc_ej1 = True
+
+    if st.session_state.get("calc_ej1", False):
         nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
         
@@ -124,7 +129,6 @@ elif st.session_state.pagina == 'ej_1':
         matrices_locales = {}
         matrices_globales = {}
         angulos_elementos = {}
-        elementos_info = []
         
         for _, barra in barras_clean.iterrows():
             b_id = int(barra["Barra"])
@@ -169,7 +173,6 @@ elif st.session_state.pagina == 'ej_1':
             Fe_global = Tg.T @ Fe_local
             for i in range(6):
                 F_equivalente_global[gdl_elem[i]] += Fe_global[i]
-            elementos_info.append({"Barra": b_id, "gdl": gdl_elem})
 
         K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
         F_LL = -F_equivalente_global[gdl_libres]
@@ -178,7 +181,6 @@ elif st.session_state.pagina == 'ej_1':
         U_global[gdl_libres] = U_libres
         R_global = K_global @ U_global + F_equivalente_global
 
-        st.balloons()
         st.success("¡Cálculo estructural automático del Ejercicio 01 procesado con éxito!")
 
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
@@ -223,10 +225,10 @@ elif st.session_state.pagina == 'ej_1':
             if os.path.exists("modelo_ej1.jpg"):
                 st.image("modelo_ej1.jpg", use_container_width=True)
             else:
-                st.info("Sube `modelo_ej1.jpg` a tu repositorio de GitHub.")
+                st.info("Sube `modelo_ej1.jpg` a tu repositorio de GitHub para ver el gráfico.")
 
 # ==========================================
-# VISTA: EJERCICIO 02 (Cálculo Automático Completo)
+# VISTA: EJERCICIO 02 (Con Session State Persistente)
 # ==========================================
 elif st.session_state.pagina == 'ej_2':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -264,7 +266,10 @@ elif st.session_state.pagina == 'ej_2':
 
     st.markdown("---")
 
-    if st.button("🚀 INICIAR CÁLCULO MATRICIAL AUTOMÁTICO - EJERCICIO 02", use_container_width=True):
+    if st.button("🚀 INICIAR CÁLCULO MATRICIAL AUTOMÁTICO - EJERCICIO 02", key="btn_ej2"):
+        st.session_state.calc_ej2 = True
+
+    if st.session_state.get("calc_ej2", False):
         nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
         
@@ -286,7 +291,6 @@ elif st.session_state.pagina == 'ej_2':
         matrices_locales = {}
         matrices_globales = {}
         angulos_elementos = {}
-        elementos_info = []
         
         for _, barra in barras_clean.iterrows():
             b_id = int(barra["Barra"])
@@ -339,7 +343,6 @@ elif st.session_state.pagina == 'ej_2':
             Fe_global = Tg.T @ Fe_local
             for i in range(6):
                 F_equivalente_global[gdl_elem[i]] += Fe_global[i]
-            elementos_info.append({"Barra": b_id, "gdl": gdl_elem})
 
         K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
         F_LL = -F_equivalente_global[gdl_libres]
@@ -393,7 +396,7 @@ elif st.session_state.pagina == 'ej_2':
             if os.path.exists("modelo_ej2.jpg"):
                 st.image("modelo_ej2.jpg", use_container_width=True)
             else:
-                st.info("Sube `modelo_ej2.jpg` a tu repositorio de GitHub.")
+                st.info("Sube `modelo_ej2.jpg` a tu repositorio de GitHub para ver el gráfico.")
 
 # ==========================================
 # VISTA: EJERCICIO 03
