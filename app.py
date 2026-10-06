@@ -26,6 +26,12 @@ st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 SYNCRET: Anál
 st.markdown("<p style='text-align: center; color: #93c5fd;'>Método de Rigideces • Análisis Estructural II • UNS</p>", unsafe_allow_html=True)
 st.markdown("---")
 
+# --- ENUNCIADO OFICIAL SOLICITADO ---
+st.markdown("""
+> **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
+""")
+st.markdown("---")
+
 # --- ENTRADA DE DATOS: NODOS ---
 st.subheader("📍 Coordenadas Nodales y Restricciones")
 nodos_default = pd.DataFrame({
@@ -36,7 +42,7 @@ nodos_default = pd.DataFrame({
     "Restringido_Y": [True, False, True],
     "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v21", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v22", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -48,7 +54,7 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v21", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v22", use_container_width=True)
 
 # --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
@@ -56,7 +62,7 @@ cargas_default = pd.DataFrame({
     "Barra": [1, 2],
     "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v21", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v22", use_container_width=True)
 
 st.markdown("---")
 
@@ -83,6 +89,8 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
         
         elementos_info = []
         fuerzas_internas = []
+        matrices_locales = {}
+        matrices_globales = {}
         
         for _, barra in barras_clean.iterrows():
             b_id = int(barra["Barra"])
@@ -121,6 +129,8 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             K_L[4,1] = -k22; K_L[4,2] = -k23; K_L[4,4] = k22; K_L[4,5] = -k23
             K_L[5,1] = k23; K_L[5,2] = k36; K_L[5,4] = -k23; K_L[5,5] = k33
             
+            matrices_locales[b_id] = K_L.copy()
+            
             c = cos_phi
             s = sin_phi
             Tg = np.array([
@@ -133,6 +143,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             ])
             
             K_g_elem = Tg.T @ K_L @ Tg
+            matrices_globales[b_id] = K_g_elem.copy()
             
             idx1 = nodo_idx[n1_id]
             idx2 = nodo_idx[n2_id]
@@ -225,36 +236,81 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
         st.balloons()
         st.success("¡Cálculo matricial procesado con éxito!")
 
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 GRÁFICOS"
+        # --- PESTAÑAS MODULARES SOLICITADAS ---
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+            "📐 Geometría y Elementos", 
+            "📋 Partición de GDL", 
+            "🧮 Matrices Locales (k)", 
+            "🌐 Matrices Globales (Ke)", 
+            "📊 Matriz Global Ensamblada", 
+            "📉 Desplazamientos y Reacciones", 
+            "⚖️ Equilibrio Estático", 
+            "🎨 GRÁFICOS"
         ])
         
         with tab1:
-            st.write("**Desplazamientos Nodales**")
-            desp_df = pd.DataFrame({
-                "Nodo": nodos_clean["Nodo"].astype(int),
-                "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)],
-                "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)],
-                "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]
-            })
-            st.dataframe(desp_df, hide_index=True, use_container_width=True)
+            st.subheader("📐 Resumen de Geometría y Propiedades")
+            st.write("**Nodos y Coordenadas:**")
+            st.dataframe(nodos_clean, hide_index=True, use_container_width=True)
+            st.write("**Elementos y Secciones:**")
+            st.dataframe(barras_clean, hide_index=True, use_container_width=True)
             
         with tab2:
-            st.write("**Reacciones en los Apoyos**")
-            reac_df = pd.DataFrame({
+            st.subheader("📋 Partición de Grados de Libertad (GDL)")
+            gdl_df = pd.DataFrame({
                 "Nodo": nodos_clean["Nodo"].astype(int),
-                "Rx (Tn)": np.round(R_global[0::3], 3),
-                "Ry (Tn)": np.round(R_global[1::3], 3),
-                "Mz (Tn.m)": np.round(R_global[2::3], 3)
+                "GDL X": [3*i for i in range(n_nodos)],
+                "GDL Y": [3*i+1 for i in range(n_nodos)],
+                "GDL Giro": [3*i+2 for i in range(n_nodos)]
             })
-            reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
-            st.dataframe(reac_df, hide_index=True, use_container_width=True)
+            st.dataframe(gdl_df, hide_index=True, use_container_width=True)
+            st.info(f"📌 **GDL Libres:** {gdl_libres}")
+            st.info(f"📌 **GDL Restringidos:** {gdl_restringidos}")
 
         with tab3:
-            st.write("**Fuerzas en los Extremos de los Elementos**")
-            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
+            st.subheader("🧮 Matrices de Rigidez Local (k) por Elemento")
+            for b_id, k_mat in matrices_locales.items():
+                st.write(f"**Barra {b_id} (Sistema Local 6x6):**")
+                st.dataframe(pd.DataFrame(np.round(k_mat, 2)), use_container_width=True)
 
         with tab4:
+            st.subheader("🌐 Matrices de Rigidez Global (Ke) por Elemento")
+            for b_id, kg_mat in matrices_globales.items():
+                st.write(f"**Barra {b_id} (Sistema Global 6x6):**")
+                st.dataframe(pd.DataFrame(np.round(kg_mat, 2)), use_container_width=True)
+
+        with tab5:
+            st.subheader("📊 Matriz de Rigidez Global de la Estructura (Ensamblada)")
+            st.dataframe(pd.DataFrame(np.round(K_global, 2)), use_container_width=True)
+
+        with tab6:
+            st.subheader("📉 Desplazamientos Nodales y Reacciones en los Apoyos")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.write("**Desplazamientos:**")
+                desp_df = pd.DataFrame({
+                    "Nodo": nodos_clean["Nodo"].astype(int),
+                    "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)],
+                    "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)],
+                    "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]
+                })
+                st.dataframe(desp_df, hide_index=True, use_container_width=True)
+            with col_b:
+                st.write("**Reacciones:**")
+                reac_df = pd.DataFrame({
+                    "Nodo": nodos_clean["Nodo"].astype(int),
+                    "Rx (Tn)": np.round(R_global[0::3], 3),
+                    "Ry (Tn)": np.round(R_global[1::3], 3),
+                    "Mz (Tn.m)": np.round(R_global[2::3], 3)
+                })
+                reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
+                st.dataframe(reac_df, hide_index=True, use_container_width=True)
+
+        with tab7:
+            st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas (Axial, Cortante y Momento)")
+            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
+
+        with tab8:
             st.subheader("🎨 Galería de Diagramas y Resultados Oficiales")
             st.markdown("Visualización automática de los gráficos estructurales del análisis:")
             
