@@ -107,7 +107,7 @@ elif st.session_state.pagina == 'ej_prueba':
             with col2: st.image("axial.jpg", use_container_width=True) if os.path.exists("axial.jpg") else st.warning("Falta axial.jpg")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Con partición de 4 bloques limpios)
+# VISTA: EJERCICIO 01 (Con partición de 4 bloques corregida)
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -298,7 +298,7 @@ elif st.session_state.pagina == 'ej_1':
             nombres_gdl_ordenados = [f"GDL {i+1} (Libre)" if i in gdl_libres else f"GDL {i+1} (Rest.)" for i in gdl_ordenados]
             df_K_part = pd.DataFrame(np.round(K_particionada, 2), index=nombres_gdl_ordenados, columns=nombres_gdl_ordenados)
 
-            # Función para pintar exactamente en 4 cuadrantes limpios
+            # Función de colores corregida utilizando .apply() con axis=1
             def color_cuadrantes(row):
                 styles = []
                 row_idx = row.name
@@ -315,7 +315,7 @@ elif st.session_state.pagina == 'ej_1':
                         styles.append('background-color: #7c2d12; color: #fed7aa;') # Bloques K_LR / K_RL (Naranja/Marrón)
                 return styles
 
-            st.dataframe(df_K_part.style.map(color_cuadrantes), use_container_width=True)
+            st.dataframe(df_K_part.style.apply(color_cuadrantes, axis=1), use_container_width=True)
 
         with tab6:
             st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados Oficiales EngiLab)")
@@ -341,48 +341,4 @@ elif st.session_state.pagina == 'ej_1':
 
         with tab7:
             st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas (Fuerzas en Extremos)")
-            fuerzas_oficiales = pd.DataFrame({
-                "Barra": [1, 1, 2, 2, 3, 3],
-                "Extremo": ["Ini (1)", "Fin (2)", "Ini (2)", "Fin (3)", "Ini (3)", "Fin (4)"],
-                "Axial (Tn)": [-5.75, -5.75, -4.00, -4.00, -5.83, -5.83],
-                "Cortante (Tn)": [0.50, -4.00, 5.75, -4.25, 0.35, 0.35],
-                "Momento (Tn.m)": [1.61, -4.39, -5.39, -1.63, -1.63, -0.26]
-            })
-            st.dataframe(fuerzas_oficiales, hide_index=True, use_container_width=True)
-
-        with tab8:
-            st.subheader("🎨 Galería de Diagramas y Resultados Oficiales - Ejercicio 01")
-            col1, col2 = st.columns(2)
-            
-            def mostrar_img(base, titulo):
-                p = None
-                for ext in [".jpg", ".png", ".jpeg"]:
-                    if os.path.exists(base + ext):
-                        p = base + ext
-                        break
-                st.markdown(f"**{titulo}**")
-                if p: st.image(p, use_container_width=True)
-                else: st.warning(f"⚠ Sube `{base}.jpg` a GitHub.")
-
-            with col1:
-                mostrar_img("modelo_ej1", "1. Modelo Geométrico y Cargas")
-                mostrar_img("cortante_ej1", "3. Diagrama de Esfuerzo Cortante (V)")
-                mostrar_img("deformacion_ej1", "5. Diagrama de Deformación")
-            with col2:
-                mostrar_img("axial_ej1", "2. Diagrama de Fuerza Axial (N)")
-                mostrar_img("momento_ej1", "4. Diagrama de Momento Flector (M)")
-                mostrar_img("cuerpo_libre_ej1", "6. Diagrama de Cuerpo Libre (Reacciones)")
-
-# ==========================================
-# VISTAS DE LOS EJERCICIOS 02 Y 03
-# ==========================================
-elif st.session_state.pagina in ['ej_2', 'ej_3']:
-    if st.button("⬅️ Volver al Menú Principal"):
-        ir_a('home')
-        st.rerun()
-        
-    st.markdown(f"<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO {st.session_state.pagina[-1].upper()}</h1>", unsafe_allow_html=True)
-    st.markdown("""
-    > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
-    """)
-    st.info("🚧 Este ejercicio está configurado en la estructura del menú. Solo indícame sus datos cuando estés listo para programarlo.")
+            fuerzas_oficiales = pd
