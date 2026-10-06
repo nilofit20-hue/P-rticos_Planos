@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="SYNCRET - Pórticos Planos", page_icon="🏛️", layout="wide")
 
@@ -36,7 +35,7 @@ nodos_default = pd.DataFrame({
     "Restringido_Y": [True, False, True],
     "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v16", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v18", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -48,7 +47,7 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v16", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v18", use_container_width=True)
 
 # --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
@@ -56,11 +55,11 @@ cargas_default = pd.DataFrame({
     "Barra": [1, 2],
     "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v16", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v18", use_container_width=True)
 
 st.markdown("---")
 
-if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS DINÁMICOS", use_container_width=True):
+if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width=True):
     try:
         nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
@@ -157,9 +156,7 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS DINÁMICOS", use_contain
                 F_equivalente_global[gdl_elem[i]] += Fe_global[i]
                 
             elementos_info.append({
-                "Barra": b_id, "N1": n1_id, "N2": n2_id, "L": L, 
-                "K_L": K_L, "Tg": Tg, "gdl": gdl_elem, "Fe": Fe_local, "w": w_val,
-                "x1": n1["X (m)"], "y1": n1["Y (m)"], "x2": n2["X (m)"], "y2": n2["Y (m)"]
+                "Barra": b_id, "N1": n1_id, "N2": n2_id, "L": L, "w": w_val
             })
 
         # --- RESOLUCIÓN MATRICIAL ---
@@ -173,25 +170,62 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS DINÁMICOS", use_contain
         R_global = K_global @ U_global + F_equivalente_global
 
         for el in elementos_info:
+            b_id = el["Barra"]
+            n1 = nodos_clean[nodos_clean["Nodo"] == el["N1"]].iloc[0]
+            n2 = nodos_clean[nodos_clean["Nodo"] == el["N2"]].iloc[0]
+            dx = n2["X (m)"] - n1["X (m)"]
+            dy = n2["Y (m)"] - n1["Y (m)"]
+            L = np.sqrt(dx**2 + dy**2)
+            c, s = dx/L, dy/L
+            
+            b_row = barras_clean[barras_clean["Barra"] == b_id].iloc[0]
+            A = b_row["Base (m)"] * b_row["Altura (m)"]
+            I = (b_row["Base (m)"] * b_row["Altura (m)"]**3) / 12.0
+            E = b_row["E (Tn/m2)"]
+            ae_l, ei = (A * E) / L, E * I
+            
+            k11 = ae_l
+            k22 = 12.0 * ei / L**3
+            k23 = 6.0 * ei / L**2
+            k33 = 4.0 * ei / L
+            k36 = 2.0 * ei / L
+            
+            K_L = np.zeros((6, 6))
+            K_L[0,0] = k11; K_L[0,3] = -k11; K_L[3,0] = -k11; K_L[3,3] = k11
+            K_L[1,1] = k22; K_L[1,2] = k23; K_L[1,4] = -k22; K_L[1,5] = k23
+            K_L[2,1] = k23; K_L[2,2] = k33; K_L[2,4] = -k23; K_L[2,5] = k36
+            K_L[4,1] = -k22; K_L[4,2] = -k23; K_L[4,4] = k22; K_L[4,5] = -k23
+            K_L[5,1] = k23; K_L[5,2] = k36; K_L[5,4] = -k23; K_L[5,5] = k33
+            
+            Tg = np.array([
+                [ c,  s, 0,  0,  0, 0],
+                [-s,  c, 0,  0,  0, 0],
+                [ 0,  0, 1,  0,  0, 0],
+                [ 0,  0, 0,  c,  s, 0],
+                [ 0,  0, 0, -s,  c, 0],
+                [ 0,  0, 0,  0,  0, 1]
+            ])
+            
             u_global_elem = U_global[el["gdl"]]
-            u_local_elem = el["Tg"] @ u_global_elem
-            f_local = el["K_L"] @ u_local_elem + el["Fe"]
+            u_local_elem = Tg @ u_global_elem
+            Fe_local = np.array([0.0, (el["w"] * L)/2.0, (el["w"] * L**2)/12.0, 0.0, (el["w"] * L)/2.0, -(el["w"] * L**2)/12.0])
+            f_local = K_L @ u_local_elem + Fe_local
+            
             fuerzas_internas.append({
-                "Barra": el["Barra"],
+                "Barra": b_id,
                 "Axial Ini (Tn)": round(f_local[0], 3),
                 "Cortante Ini (Tn)": round(f_local[1], 3),
                 "Momento Ini (Tn.m)": round(f_local[2], 3),
                 "Axial Fin (Tn)": round(f_local[3], 3),
                 "Cortante Fin (Tn)": round(f_local[4], 3),
-                "Momento Fin (Tn.m)": round(f_local[5], 3),
-                "f_local": f_local
+                "Momento Fin (Tn.m)": round(f_local[5], 3)
             })
 
         st.balloons()
-        st.success("¡Cálculo estructural y diagramas completados con éxito!")
+        st.success("¡Cálculo matricial y resultados procesados con éxito!")
 
         tab1, tab2, tab3, tab4 = st.tabs([
-            "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 Diagramas Geométricos"
+            "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 GRÁFICOS"
         ])
         
         with tab1:
@@ -217,59 +251,27 @@ if st.button("🚀 INICIAR CÁLCULO Y GENERAR DIAGRAMAS DINÁMICOS", use_contain
 
         with tab3:
             st.write("**Fuerzas en los Extremos de los Elementos**")
-            fi_clean = [{k: v for k, v in item.items() if k != 'f_local'} for item in fuerzas_internas]
-            st.dataframe(pd.DataFrame(fi_clean), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
 
         with tab4:
-            st.write("**🎨 Diagramas Generados Dinámicamente**")
+            st.subheader("🎨 Galería de Diagramas y Resultados Gráficos")
+            st.markdown("Sube las capturas de tus gráficos del problema (Modelo, Axial, Cortante, Momento, Deformación y Cuerpo Libre) para presentarlos ordenadamente:")
             
-            fig, axes = plt.subplots(1, 3, figsize=(16, 5))
-            fig.patch.set_facecolor('#0f172a')
-            titles = ["Momento Flector (Tn.m)", "Esfuerzo Cortante (Tn)", "Fuerza Axial (Tn)"]
+            uploaded_files = st.file_uploader(
+                "Sube tus imágenes de gráficos aquí (puedes seleccionar varias a la vez)", 
+                type=["png", "jpg", "jpeg"], 
+                accept_multiple_files=True
+            )
             
-            for idx, ax in enumerate(axes):
-                ax.set_facecolor('#1e293b')
-                for el in elementos_info:
-                    ax.plot([el["x1"], el["x2"]], [el["y1"], el["y2"]], color='#94a3b8', lw=4, zorder=3)
-                ax.set_title(titles[idx], color='white', fontweight='bold', fontsize=12)
-                ax.set_xlim(-2.0, 5.5)
-                ax.set_ylim(-1.0, 5.5)
-                ax.axis('off')
-
-            f1 = fuerzas_internas[0]["f_local"]
-            f2 = fuerzas_internas[1]["f_local"]
-
-            # 1. Momento Flector
-            axes[0].fill_betweenx([0, 4], [0, 0], [0, -f1[5]/3.0], color='#f43f5e', alpha=0.35)
-            axes[0].plot([0, -f1[5]/3.0], [0, 4], color='#f43f5e', lw=2)
-            axes[0].text(-1.5, 3.5, f"{abs(f1[5]):.2f}", color='#fca5a5', fontsize=9, fontweight='bold')
-
-            axes[0].fill_between([0, 4], [4, 4], [4.5 + abs(f2[2])/10, 4.5 + abs(f2[5])/10], color='#f43f5e', alpha=0.35)
-            axes[0].plot([0, 4], [4.5 + abs(f2[2])/10, 4.5 + abs(f2[5])/10], color='#f43f5e', lw=2)
-            axes[0].text(3.5, 5.2, f"{abs(f2[5]):.3f} Tn.m", color='#fca5a5', fontsize=9, fontweight='bold')
-
-            # 2. Cortante
-            axes[1].fill_betweenx([0, 4], [0, 0], [0, f1[1]/3.0], color='#38bdf8', alpha=0.35)
-            axes[1].plot([0, f1[1]/3.0], [0, 4], color='#38bdf8', lw=2)
-            axes[1].text(0.5, 0.5, f"{f1[1]:.2f} Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
-            axes[1].text(0.5, 3.5, f"{f1[4]:.2f} Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
-
-            axes[1].fill_between([0, 4], [4, 4], [4 + f2[1]/4.0, 4 - abs(f2[4])/4.0], color='#38bdf8', alpha=0.35)
-            axes[1].plot([0, 4], [4 + f2[1]/4.0, 4 - abs(f2[4])/4.0], color='#38bdf8', lw=2)
-            axes[1].text(3.5, 3.2, f"{abs(f2[4]):.2f} Tn", color='#7dd3fc', fontsize=9, fontweight='bold')
-
-            # 3. Axial
-            axes[2].fill_betweenx([0, 4], [0, 0], [0, -1.2], color='#10b981', alpha=0.35)
-            axes[2].plot([0, -1.2], [0, 4], color='#10b981', lw=2)
-            axes[2].plot([-1.2, -1.2], [0, 4], color='#10b981', lw=2)
-            axes[2].text(-1.8, 2.0, f"{abs(f1[0]):.2f} Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
-
-            axes[2].fill_between([0, 4], [4, 4], [4.8, 4.8], color='#10b981', alpha=0.35)
-            axes[2].plot([0, 4], [4.8, 4.8], color='#10b981', lw=2)
-            axes[2].text(1.8, 5.1, f"{abs(f2[0]):.2f} Tn", color='#6ee7b7', fontsize=9, fontweight='bold')
-
-            st.pyplot(fig)
-            st.info("💡 Gráficos dinámicos actualizados correctamente.")
+            if uploaded_files:
+                st.markdown("---")
+                # Mostrarlas en columnas de 2 para que se vea estético y ordenado
+                cols = st.columns(2)
+                for index, uploaded_file in enumerate(uploaded_files):
+                    with cols[index % 2]:
+                        st.image(uploaded_file, caption=uploaded_file.name, use_container_width=True)
+            else:
+                st.info("💡 Consejo: Selecciona o arrastra todas tus capturas juntas en el botón de arriba para organizarlas automáticamente en la galería.")
 
     except Exception as e:
         st.error(f"❌ Error en el cálculo estructural: {e}")
