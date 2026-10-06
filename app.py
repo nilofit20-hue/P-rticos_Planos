@@ -479,7 +479,7 @@ elif st.session_state.pagina == 'ej_2':
                 mostrar_img2("cuerpo_libre_ej2", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
 # ==========================================
-# VISTA: EJERCICIO 03
+# VISTA: EJERCICIO 03 (Cálculo Automático Completo)
 # ==========================================
 elif st.session_state.pagina == 'ej_3':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -487,7 +487,7 @@ elif st.session_state.pagina == 'ej_3':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 03</h1>", unsafe_allow_html=True)
-    st.markdown("> **ENUNCIADO:** PÓRTICO CON CLARO DE 8.0 m, ALTURA DE 5.0 m, CARGA LATERAL UNIFORME Y CARGA TRIANGULAR SUPERIOR[cite: 26].")
+    st.markdown("> **ENUNCIADO:** PÓRTICO CON CLARO DE 8.0 m, ALTURA DE 5.0 m, COLUMNA ARTICULADA CON CARGA LATERAL Y VIGA CON CARGA TRIANGULAR[cite: 26].")
 
     if os.path.exists("enunciado_3.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
@@ -506,7 +506,7 @@ elif st.session_state.pagina == 'ej_3':
         "Y (m)": [0.0, 5.0, 5.0, 0.0],
         "Restringido_X": [True, False, False, True],
         "Restringido_Y": [True, False, False, True],
-        "Restringido_Giro": [False, False, False, False] # Apoyos articulados/pins en las bases a y b
+        "Restringido_Giro": [False, False, False, False]
     })
     nodos_df_3 = st.data_editor(nodos_default_3, num_rows="dynamic", key="nodos_ej3", use_container_width=True)
 
@@ -544,10 +544,12 @@ elif st.session_state.pagina == 'ej_3':
         gdl_libres = [i for i in range(n_gdl) if i not in gdl_restringidos]
         
         K_global = np.zeros((n_gdl, n_gdl))
+        F_equivalente_global = np.zeros(n_gdl)
         matrices_locales = {}
         matrices_globales = {}
         angulos_elementos = {}
         conexiones_elementos = {}
+        elementos_info = []
         
         for _, barra in barras_clean.iterrows():
             b_id = int(barra["Barra"])
@@ -583,9 +585,71 @@ elif st.session_state.pagina == 'ej_3':
             for i in range(6):
                 for j in range(6):
                     K_global[gdl_elem[i], gdl_elem[j]] += K_g_elem[i, j]
+            
+            Fe_local = np.zeros(6)
+            if b_id == 1:
+                # Columna izq: Carga lateral uniforme wx = 4.0 Tn/m[cite: 26]
+                wx = 4.0
+                f_horiz_total = wx * L
+                Fe_local[0] = (f_horiz_total / 2.0) * c
+                Fe_local[1] = -(f_horiz_total / 2.0) * s
+                Fe_local[3] = (f_horiz_total / 2.0) * c
+                Fe_local[4] = -(f_horiz_total / 2.0) * s
+            elif b_id == 2:
+                # Viga central: Carga triangular de 0 a 4.0 Tn/m[cite: 26]
+                wy_max = 4.0
+                Fe_local[1] = (7.0 * wy_max * L) / 20.0
+                Fe_local[2] = (3.0 * wy_max * L**2) / 20.0
+                Fe_local[4] = (3.0 * wy_max * L) / 20.0
+                Fe_local[5] = -(7.0 * wy_max * L**2) / 60.0
+
+            Fe_global = Tg.T @ Fe_local
+            for i in range(6):
+                F_equivalente_global[gdl_elem[i]] += Fe_global[i]
+            elementos_info.append({"Barra": b_id, "gdl": gdl_elem})
+
+        K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
+        F_LL = -F_equivalente_global[gdl_libres]
+        U_libres = np.linalg.pinv(K_LL) @ F_LL
+        U_global = np.zeros(n_gdl)
+        U_global[gdl_libres] = U_libres
+        R_global = K_global @ U_global + F_equivalente_global
+
+        fuerzas_internas_3 = []
+        for el in elementos_info:
+            b_id = el["Barra"]
+            n1_id, n2_id = conexiones_elementos[b_id]
+            n1 = nodos_clean[nodos_clean["Nodo"] == n1_id].iloc[0]
+            n2 = nodos_clean[nodos_clean["Nodo"] == n2_id].iloc[0]
+            dx, dy = n2["X (m)"] - n1["X (m)"], n2["Y (m)"] - n1["Y (m)"]
+            L = np.sqrt(dx**2 + dy**2)
+            c, s = dx/L, dy/L
+            K_L = matrices_locales[b_id]
+            Tg = np.array([[c, s, 0, 0, 0, 0], [-s, c, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, c, s, 0], [0, 0, 0, -s, c, 0], [0, 0, 0, 0, 0, 1]])
+            u_local_elem = Tg @ U_global[el["gdl"]]
+            Fe_local = np.zeros(6)
+            if b_id == 1:
+                wx = 4.0
+                f_horiz_total = wx * L
+                Fe_local[0] = (f_horiz_total / 2.0) * c
+                Fe_local[1] = -(f_horiz_total / 2.0) * s
+                Fe_local[3] = (f_horiz_total / 2.0) * c
+                Fe_local[4] = -(f_horiz_total / 2.0) * s
+            elif b_id == 2:
+                wy_max = 4.0
+                Fe_local[1] = (7.0 * wy_max * L) / 20.0
+                Fe_local[2] = (3.0 * wy_max * L**2) / 20.0
+                Fe_local[4] = (3.0 * wy_max * L) / 20.0
+                Fe_local[5] = -(7.0 * wy_max * L**2) / 60.0
+            f_local = K_L @ u_local_elem + Fe_local
+            fuerzas_internas_3.append({
+                "Barra": b_id,
+                "Axial Ini (Tn)": round(f_local[0], 3), "Cortante Ini (Tn)": round(f_local[1], 3), "Momento Ini (Tn.m)": round(f_local[2], 3),
+                "Axial Fin (Tn)": round(f_local[3], 3), "Cortante Fin (Tn)": round(f_local[4], 3), "Momento Fin (Tn.m)": round(f_local[5], 3)
+            })
 
         st.balloons()
-        st.success("¡Cálculo estructural del Ejercicio 03 procesado con éxito!")
+        st.success("¡Cálculo estructural automático del Ejercicio 03 procesado con éxito!")
 
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
             "📐 Geometría", "📋 GDL", "🧮 Locales", "🌐 Globales", "📊 Matriz Particionada", "📉 Desplazamientos y Reacciones", "⚖️ Equilibrio", "🎨 GRÁFICOS"
@@ -645,16 +709,27 @@ elif st.session_state.pagina == 'ej_3':
             col_a, col_b = st.columns(2)
             with col_a:
                 st.write("**Desplazamientos Nodales:**")
-                desp_df_3 = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Dx": [f"{0.00000}" for i in range(n_nodos)], "Dy": [f"{0.00000}" for i in range(n_nodos)], "Giro": [f"{0.00000}" for i in range(n_nodos)]})
+                desp_df_3 = pd.DataFrame({
+                    "Nodo": nodos_clean["Nodo"].astype(int),
+                    "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)],
+                    "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)],
+                    "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]
+                })
                 st.dataframe(desp_df_3, hide_index=True, use_container_width=True)
             with col_b:
                 st.write("**Reacciones en los Apoyos:**")
-                reac_df_3 = pd.DataFrame({"Nodo": [1, 4], "Rx (Tn)": [0.0, 0.0], "Ry (Tn)": [0.0, 0.0], "Mz (Tn.m)": [0.0, 0.0]})
+                reac_df_3 = pd.DataFrame({
+                    "Nodo": nodos_clean["Nodo"].astype(int),
+                    "Rx (Tn)": np.round(R_global[0::3], 3),
+                    "Ry (Tn)": np.round(R_global[1::3], 3),
+                    "Mz (Tn.m)": np.round(R_global[2::3], 3)
+                })
+                reac_df_3 = reac_df_3[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values]
                 st.dataframe(reac_df_3, hide_index=True, use_container_width=True)
                 
         with tab7:
-            st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas en los Elementos")
-            st.info("Calcula o ingresa las fuerzas internas de los elementos para el Ejercicio 03.")
+            st.subheader("⚖️ Equilibrio Estático y Fuerzas en Extremos de Elementos")
+            st.dataframe(pd.DataFrame(fuerzas_internas_3), hide_index=True, use_container_width=True)
             
         with tab8:
             st.subheader("🎨 Galería de Diagramas - Ejercicio 03")
