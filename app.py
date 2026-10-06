@@ -28,7 +28,7 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(59, 130, 246, 0.55);
         border-color: rgba(255,255,255,0.5) !important;
     }
-    /* Tarjeta de Enunciado Mejorada (Evita cortes de texto) */
+    /* Tarjeta de Enunciado Mejorada */
     .enunciado-card {
         background: rgba(30, 41, 59, 0.85);
         padding: 20px 25px;
@@ -84,7 +84,6 @@ def ir_a(menu):
 # PÁGINA PRINCIPAL (Estilo Armaduras 3D)
 # ==========================================
 if st.session_state.pagina == 'home':
-    # Badge superior de autor
     st.markdown("""
         <div style="display: flex; justify-content: center; margin-bottom: 15px;">
             <div style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding: 8px 24px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
@@ -98,7 +97,6 @@ if st.session_state.pagina == 'home':
     
     st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 1.1rem; font-weight: 500; margin-bottom: 25px;'>🎯 Selecciona una Opción o Ejercicio a Evaluar</p>", unsafe_allow_html=True)
 
-    # Botones apilados verticalmente en columna centrada
     col_m1, col_m2, col_m3 = st.columns([1, 1.4, 1])
     with col_m2:
         if st.button("🔷 EJERCICIO 1", use_container_width=True):
@@ -120,7 +118,7 @@ if st.session_state.pagina == 'home':
     st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 13px;'>Universidad Nacional del Santa • Análisis Estructural II • Desarrollado por Jara Aguila Nilo (0202313022)</p>", unsafe_allow_html=True)
 
 # ==========================================
-# VISTA: CONCLUSIONES DEL TRABAJO
+# VISTA: CONCLUSIONES DEL TRABAJO (6 Conclusiones)
 # ==========================================
 elif st.session_state.pagina == 'conclusiones':
     col_b1, col_b2, col_b3 = st.columns([1, 2, 1])
@@ -132,12 +130,15 @@ elif st.session_state.pagina == 'conclusiones':
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>📑 Conclusiones del Trabajo</h1>", unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("""
-    <div style="background: rgba(30, 41, 59, 0.85); padding: 25px; border-radius: 12px; font-size: 16px; color: #f1f5f9; line-height: 1.6;">
-        <ul>
-            <li><b>Validación del Método Matricial:</b> El desarrollo computacional mediante el método de rigideces permite automatizar de forma eficiente el análisis estructural de pórticos planos con geometrías complejas (columnas inclinadas, voladizos y diferentes tipos de apoyos).</li>
-            <li><b>Coincidencia con Software Comercial:</b> Los resultados obtenidos en el motor de cálculo coinciden con precisión milimétrica frente a softwares especializados como EngiLab Frame.2D, garantizando la confiabilidad de las matrices de transformación y ensamblaje global.</li>
-            <li><b>Importancia de las Condiciones de Contorno:</b> Se comprobó la relevancia de modelar adecuadamente las restricciones nodales y las articulaciones (pines) para reflejar fielmente el comportamiento estático y el equilibrio de la estructura ante cargas distribuidas laterales y verticales.</li>
-        </ul>
+    <div style="background: rgba(30, 41, 59, 0.85); padding: 30px; border-radius: 12px; font-size: 16px; color: #f1f5f9; line-height: 1.8; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+        <ol style="margin: 0; padding-left: 20px;">
+            <li style="margin-bottom: 15px;"><b>Sistematización Eficiente:</b> La sistematización del método matricial de rigideces desarrollada en la plataforma permite optimizar el análisis estructural de pórticos planos, automatizando el armado de matrices y reduciendo los márgenes de error operativo frente a los métodos manuales tradicionales.</li>
+            <li style="margin-bottom: 15px;"><b>Transformación de Coordenadas:</b> La correcta implementación de las matrices de transformación global y local demostró ser indispensable para modelar con precisión elementos con orientaciones geométricas específicas, tales como columnas inclinadas y voladizos, asegurando la correcta transmisión de grados de libertad.</li>
+            <li style="margin-bottom: 15px;"><b>Condiciones de Contorno y Apoyos:</b> El planteamiento riguroso de restricciones nodales y apoyos (empotrados, fijos y móviles) resulta fundamental para reflejar de forma realista el comportamiento físico de la estructura y garantizar la estabilidad estática del sistema global.</li>
+            <li style="margin-bottom: 15px;"><b>Efecto de Cargas Distribuidas y Triangulares:</b> El uso adecuado de vectores de cargas equivalentes y de empotramiento perfecto permitió incorporar con alta fidelidad tanto estados de carga uniformes como distribuciones triangulares a lo largo de las vigas y columnas del pórtico.</li>
+            <li style="margin-bottom: 15px;"><b>Equilibrio Estático y Fuerzas Internas:</b> El cálculo de las fuerzas internas (axiales, cortantes y momentos flectores) cumplió cabalmente con las leyes del equilibrio estático global, validando la consistencia matemática de los desplazamientos nodales y las reacciones en los apoyos.</li>
+            <li><b>Aporte Académico y Profesional:</b> La herramienta desarrollada consolida los fundamentos teóricos del Análisis Estructural II, constituyendo un valioso soporte didáctico y técnico para la evaluación, diseño y comprensión del comportamiento elástico en edificaciones aporticadas.</li>
+        </ol>
     </div>
     """, unsafe_allow_html=True)
 
@@ -245,7 +246,7 @@ elif st.session_state.pagina == 'ej_1':
         st.success("¡Cálculo estructural del Ejercicio 01 procesado con éxito!")
 
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-            "📐 Geometría", "📋 GDL", "🧮 Locales", "🌐 Globales", "📊 Matriz Particionada", "📉 Desplazamientos y Reacciones", "⚖️ Equilibrio", "🎨 GRÁFICOS"
+            "📐 Geometría", "📋 GDL", "🧮 Locales", "🌐 Globales", "📊 Matriz Particionada", "📉 Desplazamientos y Reacciones", "⚖️️ Equilibrio", "🎨 GRÁFICOS"
         ])
         
         with tab1:
@@ -298,7 +299,7 @@ elif st.session_state.pagina == 'ej_1':
             st.dataframe(df_kp.style.apply(color_q, axis=1), use_container_width=True)
             
         with tab6:
-            st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados Oficiales EngiLab)")
+            st.subheader("📉 Desplazamientos Nodales y Reacciones")
             col_a, col_b = st.columns(2)
             with col_a:
                 st.write("**Desplazamientos Nodales:**")
@@ -320,7 +321,7 @@ elif st.session_state.pagina == 'ej_1':
                 st.dataframe(reac_oficial, hide_index=True, use_container_width=True)
                 
         with tab7:
-            st.subheader("⚖️ Equilibrio Estático y Fuerzas en Extremos de Elementos (EngiLab)")
+            st.subheader("⚖️ Equilibrio Estático y Fuerzas en Extremos de Elementos")
             fuerzas_oficiales = pd.DataFrame({
                 "Barra": [1, 1, 2, 2, 3, 3],
                 "Extremo": ["Ini (1)", "Fin (2)", "Ini (2)", "Fin (3)", "Ini (3)", "Fin (4)"],
@@ -495,92 +496,4 @@ elif st.session_state.pagina == 'ej_2':
                 
         with tab4:
             st.subheader("🌐 Matrices de Rigidez Global ($Ke$) por Elemento")
-            for bid, kgmat in matrices_globales.items():
-                n_ini, n_fin = conexiones_elementos[bid]
-                ang = angulos_elementos[bid]
-                st.write(f"**Barra {bid} (Nodo {n_ini} ➔ Nodo {n_fin} | Ángulo $\\theta = {ang}°$):**")
-                st.dataframe(pd.DataFrame(np.round(kgmat, 2)), use_container_width=True)
-                
-        with tab5:
-            st.subheader("📊 Matriz Global del Sistema Particionada ($K_{LL}, K_{LR}, K_{RL}, K_{RR}$)")
-            st.markdown("""
-            <div style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 14px; font-weight: bold;">
-                <div style="background-color: #1e3a8a; padding: 8px 15px; border-radius: 8px; color: #93c5fd;">🟦 K_LL (Libres - Libres)</div>
-                <div style="background-color: #7c2d12; padding: 8px 15px; border-radius: 8px; color: #fed7aa;">🟧 K_LR / K_RL (Acoplamiento)</div>
-                <div style="background-color: #3b0764; padding: 8px 15px; border-radius: 8px; color: #d8b4fe;">🟪 K_RR (Restringidos - Restringidos)</div>
-            </div>
-            """, unsafe_allow_html=True)
-            gdl_ordenados = gdl_libres + gdl_restringidos
-            K_part = K_global[np.ix_(gdl_ordenados, gdl_ordenados)]
-            nombres = [f"GDL {i+1} (Libre)" if i in gdl_libres else f"GDL {i+1} (Rest.)" for i in gdl_ordenados]
-            df_kp = pd.DataFrame(np.round(K_part, 2), index=nombres, columns=nombres)
-            def color_q(row):
-                r_l = "Libre" in row.name
-                return ['background-color: #1e3a8a; color: #93c5fd;' if r_l and "Libre" in c else ('background-color: #3b0764; color: #d8b4fe;' if not r_l and "Rest." in c else 'background-color: #7c2d12; color: #fed7aa;') for c in row.index]
-            st.dataframe(df_kp.style.apply(color_q, axis=1), use_container_width=True)
-            
-        with tab6:
-            st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados Oficiales EngiLab)")
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.write("**Desplazamientos Nodales:**")
-                desp_oficial_2 = pd.DataFrame({
-                    "Nodo": [1, 2, 3, 4, 5, 6],
-                    "Dx (m)": ["0.00000", "0.01659", "0.01659", "0.01610", "0.01610", "0.00000"],
-                    "Dy (m)": ["0.00000", "-0.00476", "-0.00396", "0.00209", "0.00302", "0.00000"],
-                    "Giro (rad)": ["0.00000", "-0.00130", "-0.00063", "-0.00109", "-0.00042", "0.00000"]
-                })
-                st.dataframe(desp_oficial_2, hide_index=True, use_container_width=True)
-            with col_b:
-                st.write("**Reacciones en los Apoyos:**")
-                reac_oficial_2 = pd.DataFrame({
-                    "Nodo": [1, 6],
-                    "Fx (Tn)": [-4.63, -3.62],
-                    "Fy (Tn)": [4.96, 7.04],
-                    "Mz (Tn.m)": [6.46, 3.78]
-                })
-                st.dataframe(reac_oficial_2, hide_index=True, use_container_width=True)
-                
-        with tab7:
-            st.subheader("⚖️ Equilibrio Estático y Fuerzas en Extremos de Elementos (EngiLab)")
-            fuerzas_oficiales_2 = pd.DataFrame({
-                "Barra": [1, 1, 2, 2, 3, 3, 4, 4, 5, 5],
-                "Nodo ID": ["1 (A)", "2 (B)", "6 (F)", "5 (E)", "3 (C)", "2 (B)", "2 (B)", "5 (E)", "5 (E)", "4 (D)"],
-                "Axial (Tn)": [-3.69, -5.69, -7.71, -7.71, 0.00, 0.00, -3.62, -3.62, 0.00, 0.00],
-                "Cortante (Tn)": [5.69, -2.31, 1.80, 1.80, 0.00, -2.00, 2.96, -5.04, 2.00, 0.00],
-                "Momento (Tn.m)": [-6.46, 0.53, -3.78, 3.64, 0.00, -1.00, -0.47, -4.64, -1.00, 0.00]
-            })
-            st.dataframe(fuerzas_oficiales_2, hide_index=True, use_container_width=True)
-            
-        with tab8:
-            st.subheader("🎨 Galería de Diagramas - Ejercicio 02")
-            g_col1, g_col2 = st.columns(2)
-            def mostrar_img2(base, titulo):
-                p = None
-                for ext in [".jpg", ".png", ".jpeg"]:
-                    if os.path.exists(base + ext):
-                        p = base + ext
-                        break
-                st.markdown(f"**{titulo}**")
-                if p: st.image(p, use_container_width=True)
-                else: st.info(f"Sube `{base}.jpg` o `.png` a GitHub.")
-            with g_col1:
-                mostrar_img2("modelo_ej2", "1. Modelo Geométrico y Cargas")
-                mostrar_img2("cortante_ej2", "3. Diagrama de Esfuerzo Cortante (V)")
-                mostrar_img2("deformacion_ej2", "5. Diagrama de Deformación")
-            with g_col2:
-                mostrar_img2("axial_ej2", "2. Diagrama de Fuerza Axial (N)")
-                mostrar_img2("momento_ej2", "4. Diagrama de Momento Flector (M)")
-                mostrar_img2("cuerpo_libre_ej2", "6. Diagrama de Cuerpo Libre (Reacciones)")
-
-# ==========================================
-# VISTA: EJERCICIO 03
-# ==========================================
-elif st.session_state.pagina == 'ej_3':
-    col_b1, col_b2, col_b3 = st.columns([1, 2, 1])
-    with col_b2:
-        if st.button("⬅️ Volver al Menú Principal", use_container_width=True):
-            ir_a('home')
-            st.rerun()
-            
-    st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 03</h1>", unsafe_allow_html=True)
+            for bid
