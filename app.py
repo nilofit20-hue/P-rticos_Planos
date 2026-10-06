@@ -19,6 +19,8 @@ st.markdown("""
         color: white !important; font-weight: bold !important; border-radius: 12px !important;
         height: 55px !important; width: 100% !important; border: 2px solid rgba(255,255,255,0.3) !important;
     }
+    /* Estilo para colorear celdas de matrices */
+    table { font-size: 13px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -106,7 +108,7 @@ elif st.session_state.pagina == 'ej_prueba':
             with col2: st.image("axial.jpg", use_container_width=True) if os.path.exists("axial.jpg") else st.warning("Falta axial.jpg")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Con resultados oficiales de EngiLab)
+# VISTA: EJERCICIO 01 (Con todas las matrices detalladas y colores)
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -150,9 +152,78 @@ elif st.session_state.pagina == 'ej_1':
     st.markdown("---")
 
     if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO 01", use_container_width=True):
+        # --- CÁLCULO RIGUROSO DE LAS MATRICES PARA EL EJERCICIO 01 ---
+        nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
+        barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
+        
+        n_nodos = len(nodos_clean)
+        n_gdl = 3 * n_nodos
+        nodo_idx = {int(row["Nodo"]): i for i, row in nodos_clean.iterrows()}
+        
+        matrices_locales = {}
+        matrices_globales = {}
+        angulos_elementos = {}
+        K_global = np.zeros((n_gdl, n_gdl))
+        
+        for _, barra in barras_clean.iterrows():
+            b_id = int(barra["Barra"])
+            n1_id = int(barra["Nodo_Ini"])
+            n2_id = int(barra["Nodo_Fin"])
+            
+            n1 = nodos_clean[nodos_clean["Nodo"] == n1_id].iloc[0]
+            n2 = nodos_clean[nodos_clean["Nodo"] == n2_id].iloc[0]
+            
+            dx = n2["X (m)"] - n1["X (m)"]
+            dy = n2["Y (m)"] - n1["Y (m)"]
+            L = np.sqrt(dx**2 + dy**2)
+            
+            phi = np.arctan2(dy, dx)
+            angulo_deg = np.degrees(phi)
+            angulos_elementos[b_id] = round(angulo_deg, 2)
+            
+            c, s = dx / L, dy / L
+            b = barra["Base (m)"]
+            h = barra["Altura (m)"]
+            E = barra["E (Tn/m2)"]
+            A = b * h
+            I = (b * h**3) / 12.0
+            
+            ae_l = (A * E) / L
+            ei = E * I
+            
+            K_L = np.zeros((6, 6))
+            K_L[0,0] = ae_l; K_L[0,3] = -ae_l; K_L[3,0] = -ae_l; K_L[3,3] = ae_l
+            K_L[1,1] = 12.0*ei/L**3; K_L[1,2] = 6.0*ei/L**2; K_L[1,4] = -12.0*ei/L**3; K_L[1,5] = 6.0*ei/L**2
+            K_L[2,1] = 6.0*ei/L**2; K_L[2,2] = 4.0*ei/L; K_L[2,4] = -6.0*ei/L**2; K_L[2,5] = 2.0*ei/L
+            K_L[4,1] = -12.0*ei/L**3; K_L[4,2] = -6.0*ei/L**2; K_L[4,4] = 12.0*ei/L**3; K_L[4,5] = -6.0*ei/L**2
+            K_L[5,1] = 6.0*ei/L**2; K_L[5,2] = 2.0*ei/L; K_L[5,4] = -6.0*ei/L**2; K_L[5,5] = 4.0*ei/L
+            
+            matrices_locales[b_id] = K_L.copy()
+            
+            Tg = np.array([
+                [ c,  s, 0,  0,  0, 0],
+                [-s,  c, 0,  0,  0, 0],
+                [ 0,  0, 1,  0,  0, 0],
+                [ 0,  0, 0,  c,  s, 0],
+                [ 0,  0, 0, -s,  c, 0],
+                [ 0,  0, 0,  0,  0, 1]
+            ])
+            
+            K_g_elem = Tg.T @ K_L @ Tg
+            matrices_globales[b_id] = K_g_elem.copy()
+            
+            idx1 = nodo_idx[n1_id]
+            idx2 = nodo_idx[n2_id]
+            gdl_elem = [3*idx1, 3*idx1+1, 3*idx1+2, 3*idx2, 3*idx2+1, 3*idx2+2]
+            
+            for i in range(6):
+                for j in range(6):
+                    K_global[gdl_elem[i], gdl_elem[j]] += K_g_elem[i, j]
+
         st.balloons()
         st.success("¡Cálculo estructural del Ejercicio 01 procesado con éxito!")
 
+        # --- 8 PESTAÑAS MODULARES CON ETIQUETAS Y COLORES ---
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
             "📐 Geometría y Elementos", 
             "📋 Partición de GDL", 
@@ -168,26 +239,54 @@ elif st.session_state.pagina == 'ej_1':
             st.subheader("📐 Resumen de Geometría y Propiedades")
             st.dataframe(nodos_df, hide_index=True, use_container_width=True)
             st.dataframe(barras_df, hide_index=True, use_container_width=True)
+            st.markdown("---")
+            st.write("**Ángulos de inclinación de los elementos:**")
+            for b_id, ang in angulos_elementos.items():
+                st.info(f"📌 **Barra {b_id}:** Ángulo $\\theta = {ang}°$ con respecto al eje global X.")
             
         with tab2:
             st.subheader("📋 Partición de Grados de Libertad (GDL)")
+            gdl_df = pd.DataFrame({
+                "Nodo": nodos_clean["Nodo"].astype(int),
+                "GDL X": [3*i for i in range(n_nodos)],
+                "GDL Y": [3*i+1 for i in range(n_nodos)],
+                "GDL Giro": [3*i+2 for i in range(n_nodos)]
+            })
+            st.dataframe(gdl_df, hide_index=True, use_container_width=True)
             st.info("📌 **GDL Libres:** [3, 4, 5, 6, 7, 8]")
             st.info("📌 **GDL Restringidos:** [0, 1, 2, 9, 10, 11]")
 
         with tab3:
             st.subheader("🧮 Matrices de Rigidez Local (k) por Elemento")
-            st.info("Matrices locales de 6x6 calculadas mediante $EA/L$ y $12EI/L^3$.")
+            st.markdown("Dimensiones 6x6 en coordenadas locales del elemento.")
+            for b_id, k_mat in matrices_locales.items():
+                st.write(f"**Barra {b_id} (Sistema Local):**")
+                df_k = pd.DataFrame(np.round(k_mat, 2))
+                st.dataframe(df_k, use_container_width=True)
 
         with tab4:
             st.subheader("🌐 Matrices de Rigidez Global (Ke) por Elemento")
-            st.info("Transformación mediante matriz de rotación $T^g k T$.")
+            st.markdown("Transformación mediante matriz de rotación $T^g k T$.")
+            for b_id, kg_mat in matrices_globales.items():
+                ang = angulos_elementos[b_id]
+                st.write(f"**Barra {b_id} (Sistema Global — Ángulo $\\theta = {ang}°$):**")
+                df_kg = pd.DataFrame(np.round(kg_mat, 2))
+                st.dataframe(df_kg, use_container_width=True)
 
         with tab5:
             st.subheader("📊 Matriz de Rigidez Global de la Estructura (Ensamblada)")
-            st.info("Matriz global de dimensión 12x12 ensamblada correctamente.")
+            st.markdown("Matriz de rigidez global del sistema de 12x12. Separada por bloques estructurales:")
+            
+            # Aplicar formato condicional de colores para distinguir bloques
+            def color_blocks(val):
+                color = '#1e293b' if abs(val) < 0.001 else ('#0284c7' if val > 0 else '#0369a1')
+                return f'background-color: {color}; color: white;'
+
+            df_K_global = pd.DataFrame(np.round(K_global, 2))
+            st.dataframe(df_K_global.style.applymap(color_blocks), use_container_width=True)
 
         with tab6:
-            st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados EngiLab)")
+            st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados Oficiales EngiLab)")
             col_a, col_b = st.columns(2)
             with col_a:
                 st.write("**Desplazamientos Nodales:**")
