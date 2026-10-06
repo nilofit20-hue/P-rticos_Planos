@@ -161,7 +161,6 @@ elif st.session_state.pagina == 'ej_1':
             
             Fe_local = np.zeros(6)
             if b_id == 1:
-                # Carga trapezoidal barra 1
                 Fe_local = np.array([0.0, 2.25, 1.125, 0.0, 2.25, -1.125])
             elif b_id == 2:
                 wy = 2.0
@@ -194,10 +193,12 @@ elif st.session_state.pagina == 'ej_1':
             st.info(f"GDL Restringidos: {gdl_restringidos}")
         with tab3:
             for bid, kmat in matrices_locales.items():
-                st.write(f"Barra {bid}:"); st.dataframe(pd.DataFrame(np.round(kmat, 2)), use_container_width=True)
+                st.write(f"Barra {bid}:")
+                st.dataframe(pd.DataFrame(np.round(kmat, 2)), use_container_width=True)
         with tab4:
             for bid, kgmat in matrices_globales.items():
-                st.write(f"Barra {bid}:"); st.dataframe(pd.DataFrame(np.round(kgmat, 2)), use_container_width=True)
+                st.write(f"Barra {bid}:")
+                st.dataframe(pd.DataFrame(np.round(kgmat, 2)), use_container_width=True)
         with tab5:
             gdl_ordenados = gdl_libres + gdl_restringidos
             K_part = K_global[np.ix_(gdl_ordenados, gdl_ordenados)]
@@ -219,7 +220,10 @@ elif st.session_state.pagina == 'ej_1':
         with tab7:
             st.info("Fuerzas internas calculadas y en equilibrio.")
         with tab8:
-            st.image("modelo_ej1.jpg", use_container_width=True) if os.path.exists("modelo_ej1.jpg") else st.info("Sube `modelo_ej1.jpg`")
+            if os.path.exists("modelo_ej1.jpg"):
+                st.image("modelo_ej1.jpg", use_container_width=True)
+            else:
+                st.info("Sube `modelo_ej1.jpg` a tu repositorio de GitHub.")
 
 # ==========================================
 # VISTA: EJERCICIO 02 (Cálculo Automático Completo)
@@ -359,10 +363,12 @@ elif st.session_state.pagina == 'ej_2':
             st.info(f"GDL Restringidos: {gdl_restringidos}")
         with tab3:
             for bid, kmat in matrices_locales.items():
-                st.write(f"Barra {bid}:"); st.dataframe(pd.DataFrame(np.round(kmat, 2)), use_container_width=True)
+                st.write(f"Barra {bid}:")
+                st.dataframe(pd.DataFrame(np.round(kmat, 2)), use_container_width=True)
         with tab4:
             for bid, kgmat in matrices_globales.items():
-                st.write(f"Barra {bid}:"); st.dataframe(pd.DataFrame(np.round(kgmat, 2)), use_container_width=True)
+                st.write(f"Barra {bid}:")
+                st.dataframe(pd.DataFrame(np.round(kgmat, 2)), use_container_width=True)
         with tab5:
             gdl_ordenados = gdl_libres + gdl_restringidos
             K_part = K_global[np.ix_(gdl_ordenados, gdl_ordenados)]
@@ -384,7 +390,10 @@ elif st.session_state.pagina == 'ej_2':
         with tab7:
             st.info("Fuerzas internas calculadas y en equilibrio.")
         with tab8:
-            st.image("modelo_ej2.jpg", use_container_width=True) if os.path.exists("modelo_ej2.jpg") else st.info("Sube `modelo_ej2.jpg`")
+            if os.path.exists("modelo_ej2.jpg"):
+                st.image("modelo_ej2.jpg", use_container_width=True)
+            else:
+                st.info("Sube `modelo_ej2.jpg` a tu repositorio de GitHub.")
 
 # ==========================================
 # VISTA: EJERCICIO 03
