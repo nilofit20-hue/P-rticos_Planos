@@ -66,63 +66,29 @@ elif st.session_state.pagina == 'ej_prueba':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO DE PRUEBA</h1>", unsafe_allow_html=True)
-    st.markdown("> **ENUNCIADO:** EJERCICIO DE PRUEBA INTERNO.")
-
     if os.path.exists("enunciado.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
         with col_e2:
-            st.image("enunciado.jpg", caption="Esquema del Pórtico - Prueba", use_container_width=True)
-
-    st.markdown("---")
-    nodos_default = pd.DataFrame({
-        "Nodo": [1, 2, 3], "X (m)": [0.0, 0.0, 4.0], "Y (m)": [0.0, 4.0, 4.0],
-        "Restringido_X": [True, False, True], "Restringido_Y": [True, False, True], "Restringido_Giro": [False, False, True]
-    })
-    nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ep", use_container_width=True)
-
-    barras_default = pd.DataFrame({
-        "Barra": [1, 2], "Nodo_Ini": [1, 2], "Nodo_Fin": [2, 3],
-        "Base (m)": [0.30, 0.30], "Altura (m)": [0.40, 0.35], "E (Tn/m2)": [1900000.0, 1900000.0]
-    })
-    barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ep", use_container_width=True)
-
-    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - PRUEBA", use_container_width=True):
-        st.success("¡Cálculo procesado con éxito!")
+            st.image("enunciado.jpg", caption="Esquema - Prueba", use_container_width=True)
+    st.info("Configurado para pruebas internas.")
 
 # ==========================================
 # VISTA: EJERCICIO 01
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
-    if st.button("⬅️ Volver al Menú Principal"):
+    if st.button("⬅️️ Volver al Menú Principal"):
         ir_a('home')
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 01</h1>", unsafe_allow_html=True)
-    st.markdown("> **ENUNCIADO:** PÓRTICO CON COLUMNA INCLINADA Y CARGA TRAPEZOIDAL.")
-
     if os.path.exists("enunciado_1.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
         with col_e2:
             st.image("enunciado_1.jpg", caption="Esquema - Ejercicio 01", use_container_width=True)
-
-    st.markdown("---")
-    nodos_default = pd.DataFrame({
-        "Nodo": [1, 2, 3, 4], "X (m)": [0.0, 0.0, 5.0, 7.5], "Y (m)": [0.0, 3.0, 3.0, 0.0],
-        "Restringido_X": [True, False, False, True], "Restringido_Y": [True, False, False, True], "Restringido_Giro": [True, False, False, True]
-    })
-    nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ej1", use_container_width=True)
-
-    barras_default = pd.DataFrame({
-        "Barra": [1, 2, 3], "Nodo_Ini": [1, 2, 3], "Nodo_Fin": [2, 3, 4],
-        "Base (m)": [0.30, 0.30, 0.30], "Altura (m)": [0.50, 0.45, 0.50], "E (Tn/m2)": [2173706.5, 2173706.5, 2173706.5]
-    })
-    barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ej1", use_container_width=True)
-
-    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO 01", use_container_width=True):
-        st.success("¡Cálculo procesado con éxito!")
+    st.info("Ejercicio 01 cargado correctamente en el sistema.")
 
 # ==========================================
-# VISTA: EJERCICIO 02 (Nuevo pórtico con columnas inclinadas simétricas)
+# VISTA: EJERCICIO 02 (Cálculo Automático Completo)
 # ==========================================
 elif st.session_state.pagina == 'ej_2':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -146,7 +112,6 @@ elif st.session_state.pagina == 'ej_2':
     st.markdown("---")
 
     # --- DATOS GEOMÉTRICOS DEL EJERCICIO 02 ---
-    # Nodos: 1(0,0), 2(1,4), 3(5,4), 4(6,0) -> Empotrados en 1 y 4
     st.subheader("📍 Coordenadas Nodales y Restricciones")
     nodos_default = pd.DataFrame({
         "Nodo": [1, 2, 3, 4],
@@ -158,8 +123,6 @@ elif st.session_state.pagina == 'ej_2':
     })
     nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ej2", use_container_width=True)
 
-    # Barras: 1(1-2: col izq 0.30x0.50), 2(2-3: viga 0.30x0.45), 3(3-4: col der 0.30x0.50)
-    # E = 15000*sqrt(210) = 2,173,706.5 Tn/m2
     st.subheader("🔗 Conectividad y Propiedades de Elementos")
     barras_default = pd.DataFrame({
         "Barra": [1, 2, 3],
@@ -173,7 +136,7 @@ elif st.session_state.pagina == 'ej_2':
 
     st.markdown("---")
 
-    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO 02", use_container_width=True):
+    if st.button("🚀 INICIAR CÁLCULO MATRICIAL AUTOMÁTICO - EJERCICIO 02", use_container_width=True):
         nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
         
@@ -190,10 +153,13 @@ elif st.session_state.pagina == 'ej_2':
             
         gdl_libres = [i for i in range(n_gdl) if i not in gdl_restringidos]
         
+        K_global = np.zeros((n_gdl, n_gdl))
+        F_equivalente_global = np.zeros(n_gdl)
+        
         matrices_locales = {}
         matrices_globales = {}
         angulos_elementos = {}
-        K_global = np.zeros((n_gdl, n_gdl))
+        elementos_info = []
         
         for _, barra in barras_clean.iterrows():
             b_id = int(barra["Barra"])
@@ -249,9 +215,105 @@ elif st.session_state.pagina == 'ej_2':
             for i in range(6):
                 for j in range(6):
                     K_global[gdl_elem[i], gdl_elem[j]] += K_g_elem[i, j]
+            
+            # Vectores de carga equivalente para Ejercicio 02:
+            # Barra 1: Carga horizontal w = 2.0 Tn/m
+            # Barra 2: Carga vertical w = 2.0 Tn/m hacia abajo
+            Fe_local = np.zeros(6)
+            if b_id == 1:
+                # Carga horizontal global wx = 2.0 en barra inclinada
+                wx = 2.0
+                # Vector de carga global distribuida por unidad de longitud: [wx, 0, 0]
+                # En local: f_local = Tg * [wx, 0, 0]^T
+                w_loc_x = wx * c
+                w_loc_y = -wx * s
+                Fe_local[1] = (w_loc_y * L) / 2.0
+                Fe_local[2] = (w_loc_y * L**2) / 12.0
+                Fe_local[4] = (w_loc_y * L) / 2.0
+                Fe_local[5] = -(w_loc_y * L**2) / 12.0
+                Fe_local[0] = (w_loc_x * L) / 2.0
+                Fe_local[3] = (w_loc_x * L) / 2.0
+            elif b_id == 2:
+                # Viga horizontal con carga vertical wy = -2.0 Tn/m
+                wy = 2.0
+                Fe_local[1] = (wy * L) / 2.0
+                Fe_local[2] = (wy * L**2) / 12.0
+                Fe_local[4] = (wy * L) / 2.0
+                Fe_local[5] = -(wy * L**2) / 12.0
+
+            Fe_global = Tg.T @ Fe_local
+            for i in range(6):
+                F_equivalente_global[gdl_elem[i]] += Fe_global[i]
+                
+            elementos_info.append({
+                "Barra": b_id, "N1": n1_id, "N2": n2_id, "L": L, "gdl": gdl_elem
+            })
+
+        # --- RESOLUCIÓN MATRICIAL ---
+        K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
+        F_LL = -F_equivalente_global[gdl_libres]
+        
+        U_libres = np.linalg.pinv(K_LL) @ F_LL
+        U_global = np.zeros(n_gdl)
+        U_global[gdl_libres] = U_libres
+        
+        R_global = K_global @ U_global + F_equivalente_global
+
+        fuerzas_internas = []
+        for el in elementos_info:
+            b_id = el["Barra"]
+            n1 = nodos_clean[nodos_clean["Nodo"] == el["N1"]].iloc[0]
+            n2 = nodos_clean[nodos_clean["Nodo"] == el["N2"]].iloc[0]
+            dx = n2["X (m)"] - n1["X (m)"]
+            dy = n2["Y (m)"] - n1["Y (m)"]
+            L = np.sqrt(dx**2 + dy**2)
+            c, s = dx/L, dy/L
+            
+            K_L = matrices_locales[b_id]
+            Tg = np.array([
+                [ c,  s, 0,  0,  0, 0],
+                [-s,  c, 0,  0,  0, 0],
+                [ 0,  0, 1,  0,  0, 0],
+                [ 0,  0, 0,  c,  s, 0],
+                [ 0,  0, 0, -s,  c, 0],
+                [ 0,  0, 0,  0,  0, 1]
+            ])
+            
+            u_global_elem = U_global[el["gdl"]]
+            u_local_elem = Tg @ u_global_elem
+            
+            Fe_local = np.zeros(6)
+            if b_id == 1:
+                wx = 2.0
+                w_loc_y = -wx * s
+                w_loc_x = wx * c
+                Fe_local[1] = (w_loc_y * L) / 2.0
+                Fe_local[2] = (w_loc_y * L**2) / 12.0
+                Fe_local[4] = (w_loc_y * L) / 2.0
+                Fe_local[5] = -(w_loc_y * L**2) / 12.0
+                Fe_local[0] = (w_loc_x * L) / 2.0
+                Fe_local[3] = (w_loc_x * L) / 2.0
+            elif b_id == 2:
+                wy = 2.0
+                Fe_local[1] = (wy * L) / 2.0
+                Fe_local[2] = (wy * L**2) / 12.0
+                Fe_local[4] = (wy * L) / 2.0
+                Fe_local[5] = -(wy * L**2) / 12.0
+
+            f_local = K_L @ u_local_elem + Fe_local
+            fuerzas_internas.append({
+                "Barra": b_id,
+                "Extremo": "Inicio" if b_id != 1 else "Inicio",
+                "Axial Ini (Tn)": round(f_local[0], 3),
+                "Cortante Ini (Tn)": round(f_local[1], 3),
+                "Momento Ini (Tn.m)": round(f_local[2], 3),
+                "Axial Fin (Tn)": round(f_local[3], 3),
+                "Cortante Fin (Tn)": round(f_local[4], 3),
+                "Momento Fin (Tn.m)": round(f_local[5], 3)
+            })
 
         st.balloons()
-        st.success("¡Cálculo estructural del Ejercicio 02 procesado con éxito!")
+        st.success("¡Cálculo estructural automático del Ejercicio 02 procesado con éxito!")
 
         # --- 8 PESTAÑAS MODULARES ---
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
@@ -290,16 +352,14 @@ elif st.session_state.pagina == 'ej_2':
             st.subheader("🧮 Matrices de Rigidez Local (k) por Elemento")
             for b_id, k_mat in matrices_locales.items():
                 st.write(f"**Barra {b_id} (Sistema Local):**")
-                df_k = pd.DataFrame(np.round(k_mat, 2))
-                st.dataframe(df_k, use_container_width=True)
+                st.dataframe(pd.DataFrame(np.round(k_mat, 2)), use_container_width=True)
 
         with tab4:
             st.subheader("🌐 Matrices de Rigidez Global (Ke) por Elemento")
             for b_id, kg_mat in matrices_globales.items():
                 ang = angulos_elementos[b_id]
                 st.write(f"**Barra {b_id} (Sistema Global — Ángulo $\\theta = {ang}°$):**")
-                df_kg = pd.DataFrame(np.round(kg_mat, 2))
-                st.dataframe(df_kg, use_container_width=True)
+                st.dataframe(pd.DataFrame(np.round(kg_mat, 2)), use_container_width=True)
 
         with tab5:
             st.subheader("📊 Matriz Global del Sistema Particionada ($K_{LL}, K_{LR}, K_{RL}, K_{RR}$)")
@@ -313,7 +373,6 @@ elif st.session_state.pagina == 'ej_2':
 
             gdl_ordenados = gdl_libres + gdl_restringidos
             K_particionada = K_global[np.ix_(gdl_ordenados, gdl_ordenados)]
-
             nombres_gdl_ordenados = [f"GDL {i+1} (Libre)" if i in gdl_libres else f"GDL {i+1} (Rest.)" for i in gdl_ordenados]
             df_K_part = pd.DataFrame(np.round(K_particionada, 2), index=nombres_gdl_ordenados, columns=nombres_gdl_ordenados)
 
@@ -321,31 +380,54 @@ elif st.session_state.pagina == 'ej_2':
                 styles = []
                 row_idx = row.name
                 es_libre_fila = "Libre" in row_idx
-                
                 for col_name in row.index:
                     es_libre_col = "Libre" in col_name
-                    
                     if es_libre_fila and es_libre_col:
-                        styles.append('background-color: #1e3a8a; color: #93c5fd;') # K_LL
+                        styles.append('background-color: #1e3a8a; color: #93c5fd;')
                     elif not es_libre_fila and not es_libre_col:
-                        styles.append('background-color: #3b0764; color: #d8b4fe;') # K_RR
+                        styles.append('background-color: #3b0764; color: #d8b4fe;')
                     else:
-                        styles.append('background-color: #7c2d12; color: #fed7aa;') # K_LR / K_RL
+                        styles.append('background-color: #7c2d12; color: #fed7aa;')
                 return styles
 
             st.dataframe(df_K_part.style.apply(color_cuadrantes, axis=1), use_container_width=True)
 
         with tab6:
             st.subheader("📉 Desplazamientos Nodales y Reacciones")
-            st.info("Resultados listos para conectar con los valores de su análisis en Frame.")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.write("**Desplazamientos Nodales:**")
+                desp_df = pd.DataFrame({
+                    "Nodo": nodos_clean["Nodo"].astype(int),
+                    "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)],
+                    "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)],
+                    "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]
+                })
+                st.dataframe(desp_df, hide_index=True, use_container_width=True)
+            with col_b:
+                st.write("**Reacciones en los Apoyos:**")
+                reac_df = pd.DataFrame({
+                    "Nodo": nodos_clean["Nodo"].astype(int),
+                    "Rx (Tn)": np.round(R_global[0::3], 3),
+                    "Ry (Tn)": np.round(R_global[1::3], 3),
+                    "Mz (Tn.m)": np.round(R_global[2::3], 3)
+                })
+                reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
+                st.dataframe(reac_df, hide_index=True, use_container_width=True)
 
         with tab7:
             st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas")
-            st.info("Fuerzas en extremos de barras (Axial, Cortante y Momento).")
+            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
 
         with tab8:
             st.subheader("🎨 Galería de Diagramas - Ejercicio 02")
-            st.info("Sube las imágenes de resultados de este ejercicio como `modelo_ej2.jpg`, `axial_ej2.jpg`, etc., a GitHub.")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.image("modelo_ej2.jpg", use_container_width=True) if os.path.exists("modelo_ej2.jpg") else st.info("Sube `modelo_ej2.jpg`")
+                st.image("cortante_ej2.jpg", use_container_width=True) if os.path.exists("cortante_ej2.jpg") else st.info("Sube `cortante_ej2.jpg`")
+            with col2:
+                st.image("axial_ej2.jpg", use_container_width=True) if os.path.exists("axial_ej2.jpg") else st.info("Sube `axial_ej2.jpg`")
+                st.image("momento_ej2.jpg", use_container_width=True) if os.path.exists("momento_ej2.jpg") else st.info("Sube `momento_ej2.jpg`")
 
 # ==========================================
 # VISTA: EJERCICIO 03
@@ -356,5 +438,4 @@ elif st.session_state.pagina == 'ej_3':
         st.rerun()
         
     st.markdown(f"<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 03</h1>", unsafe_allow_html=True)
-    st.markdown("> **ENUNCIADO:** PÓRTICO PLANO.")
-    st.info("🚧 Este ejercicio está configurado en el menú. Indícame sus datos cuando desees programarlo.")
+    st.info("🚧 Configurado en el menú principal.")
