@@ -44,30 +44,17 @@ if st.session_state.pagina == 'home':
     col1, col2 = st.columns(2, gap="large")
     
     with col1:
-        if st.button("📌 EJERCICIO DE PRUEBA", use_container_width=True):
-            ir_a('ej_prueba')
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📌 EJERCICIO 02", use_container_width=True):
-            ir_a('ej_2')
-            st.session_state.calc_ej2 = False
-            
-    with col2:
         if st.button("📌 EJERCICIO 01", use_container_width=True):
             ir_a('ej_1')
             st.session_state.calc_ej1 = False
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("📌 EJERCICIO 03", use_container_width=True):
             ir_a('ej_3')
-
-# ==========================================
-# VISTA: EJERCICIO DE PRUEBA
-# ==========================================
-elif st.session_state.pagina == 'ej_prueba':
-    if st.button("⬅️ Volver al Menú Principal"):
-        ir_a('home')
-        st.rerun()
-    st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO DE PRUEBA</h1>", unsafe_allow_html=True)
-    st.info("Configurado para pruebas internas.")
+            
+    with col2:
+        if st.button("📌 EJERCICIO 02", use_container_width=True):
+            ir_a('ej_2')
+            st.session_state.calc_ej2 = False
 
 # ==========================================
 # VISTA: EJERCICIO 01 (Valores Oficiales EngiLab)
@@ -274,7 +261,7 @@ elif st.session_state.pagina == 'ej_1':
                 mostrar_img("cuerpo_libre_ej1", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
 # ==========================================
-# VISTA: EJERCICIO 02 (Valores Oficiales EngiLab con Inclinación Real)
+# VISTA: EJERCICIO 02
 # ==========================================
 elif st.session_state.pagina == 'ej_2':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -294,7 +281,7 @@ elif st.session_state.pagina == 'ej_2':
             st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio 02", use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📍 Coordenadas Nodales y Restricciones (6 Nudos con Columnas Inclinadas)")
+    st.subheader("📍 Coordenadas Nodales y Restricciones (6 Nudos)")
     nodos_default = pd.DataFrame({
         "Nodo": [1, 2, 3, 4, 5, 6],
         "X (m)": [0.0, 0.0, 1.0, 5.0, 6.0, 6.0],
