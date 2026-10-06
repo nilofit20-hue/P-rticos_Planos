@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os
 
 st.set_page_config(page_title="SYNCRET - Pórticos Planos", page_icon="🏛️", layout="wide")
 
@@ -35,7 +36,7 @@ nodos_default = pd.DataFrame({
     "Restringido_Y": [True, False, True],
     "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v19", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v21", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -47,7 +48,7 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v19", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v21", use_container_width=True)
 
 # --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
@@ -55,7 +56,7 @@ cargas_default = pd.DataFrame({
     "Barra": [1, 2],
     "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v19", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v21", use_container_width=True)
 
 st.markdown("---")
 
@@ -254,23 +255,32 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
 
         with tab4:
-            st.subheader("🎨 Galería de Diagramas y Resultados Gráficos")
-            st.markdown("Sube las capturas de tus gráficos del problema (Modelo, Axial, Cortante, Momento, Deformación y Cuerpo Libre) para presentarlos ordenadamente:")
+            st.subheader("🎨 Galería de Diagramas y Resultados Oficiales")
+            st.markdown("Visualización automática de los gráficos estructurales del análisis:")
             
-            uploaded_files = st.file_uploader(
-                "Sube tus imágenes de gráficos aquí (puedes seleccionar varias a la vez)", 
-                type=["png", "jpg", "jpeg"], 
-                accept_multiple_files=True
-            )
+            col1, col2 = st.columns(2)
             
-            if uploaded_files:
-                st.markdown("---")
-                cols = st.columns(2)
-                for index, uploaded_file in enumerate(uploaded_files):
-                    with cols[index % 2]:
-                        st.image(uploaded_file, caption=uploaded_file.name, use_container_width=True)
-            else:
-                st.info("💡 Consejo: Selecciona o arrastra todas tus capturas juntas en el botón de arriba para organizarlas automáticamente en la galería.")
+            def mostrar_imagen(nombre_base, titulo):
+                path = None
+                for ext in [".jpg", ".png", ".jpeg"]:
+                    if os.path.exists(nombre_base + ext):
+                        path = nombre_base + ext
+                        break
+                st.markdown(f"**{titulo}**")
+                if path:
+                    st.image(path, use_container_width=True)
+                else:
+                    st.warning(f"⚠️ Falta subir el archivo `{nombre_base}.jpg` (o .png) al repositorio de GitHub.")
+
+            with col1:
+                mostrar_imagen("modelo", "1. Modelo Geométrico y Cargas")
+                mostrar_imagen("cortante", "3. Diagrama de Esfuerzo Cortante (V)")
+                mostrar_imagen("deformacion", "5. Diagrama de Deformación")
+                
+            with col2:
+                mostrar_imagen("axial", "2. Diagrama de Fuerza Axial (N)")
+                mostrar_imagen("momento", "4. Diagrama de Momento Flector (M)")
+                mostrar_imagen("cuerpo_libre", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
     except Exception as e:
         st.error(f"❌ Error en el cálculo estructural: {e}")
