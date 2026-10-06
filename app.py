@@ -58,7 +58,7 @@ if st.session_state.pagina == 'home':
             ir_a('ej_3')
 
 # ==========================================
-# VISTA: EJERCICIO DE PRUEBA (Ejemplo anterior)
+# VISTA: EJERCICIO DE PRUEBA
 # ==========================================
 elif st.session_state.pagina == 'ej_prueba':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -74,10 +74,8 @@ elif st.session_state.pagina == 'ej_prueba':
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
         with col_e2:
             st.image("enunciado_prueba.jpg", caption="Esquema del Pórtico - Ejercicio de Prueba", use_container_width=True)
-    elif os.path.exists("enunciado.jpg"):
-        col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
-        with col_e2:
-            st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio de Prueba", use_container_width=True)
+    else:
+        st.warning("⚠️ Sube la imagen del enunciado como `enunciado_prueba.jpg` a tu repositorio de GitHub.")
 
     st.markdown("---")
 
@@ -284,7 +282,7 @@ elif st.session_state.pagina == 'ej_prueba':
             tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
                 "📐 Geometría y Elementos", "📋 Partición de GDL", "🧮 Matrices Locales (k)", 
                 "🌐 Matrices Globales (Ke)", "📊 Matriz Global Ensamblada", "📉 Desplazamientos y Reacciones", 
-                "⚖️️ Equilibrio Estático", "🎨 GRÁFICOS"
+                "⚖️ Equilibrio Estático", "🎨 GRÁFICOS"
             ])
             
             with tab1:
@@ -333,7 +331,7 @@ elif st.session_state.pagina == 'ej_prueba':
             st.error(f"❌ Error en el cálculo estructural: {e}")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (El nuevo pórtico enviado)
+# VISTA: EJERCICIO 01 (Nuevo pórtico con columna inclinada)
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -345,20 +343,18 @@ elif st.session_state.pagina == 'ej_1':
     > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
     """)
 
+    # Carga específica del enunciado para el Ejercicio 01
     if os.path.exists("enunciado_1.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
         with col_e2:
             st.image("enunciado_1.jpg", caption="Esquema del Pórtico - Ejercicio 01", use_container_width=True)
-    elif os.path.exists("enunciado.jpg"):
-        col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
-        with col_e2:
-            st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio 01", use_container_width=True)
+    else:
+        st.warning("⚠️ Sube la imagen del enunciado de este ejercicio como `enunciado_1.jpg` a tu repositorio de GitHub.")
 
     st.markdown("---")
 
-    # --- DATOS REALES DEL EJERCICIO 01 (Pórtico con columna inclinada) ---
-    # Nodos: 1(0,0), 2(0,3), 3(5,3), 4(7.5,0)
-    # Todos empotrados en los apoyos 1 y 4.
+    # --- DATOS REALES DEL EJERCICIO 01 ---
+    # Nodos: 1(0,0), 2(0,3), 3(5,3), 4(7.5,0) - Ambos empotrados en 1 y 4
     st.subheader("📍 Coordenadas Nodales y Restricciones")
     nodos_default = pd.DataFrame({
         "Nodo": [1, 2, 3, 4],
@@ -368,9 +364,9 @@ elif st.session_state.pagina == 'ej_1':
         "Restringido_Y": [True, False, False, True],
         "Restringido_Giro": [True, False, False, True]
     })
-    nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_e1_real", use_container_width=True)
+    nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ej1_real", use_container_width=True)
 
-    # Barras: 1(1-2: columna vertical 0.30x0.50), 2(2-3: viga 0.30x0.45), 3(3-4: columna inclinada 0.30x0.50)
+    # Barras: 1(1-2: columna 0.30x0.50), 2(2-3: viga 0.30x0.45), 3(3-4: col inclinada 0.30x0.50)
     # E = 15000*sqrt(210) = 2,173,706.5 Tn/m2
     st.subheader("🔗 Conectividad y Propiedades de Elementos")
     barras_default = pd.DataFrame({
@@ -381,15 +377,15 @@ elif st.session_state.pagina == 'ej_1':
         "Altura (m)": [0.50, 0.45, 0.50],
         "E (Tn/m2)": [2173706.5, 2173706.5, 2173706.5]
     })
-    barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_e1_real", use_container_width=True)
+    barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ej1_real", use_container_width=True)
 
-    # Cargas: Barra 1 (columna izq w=1.5 Tn/m promedio), Barra 2 (viga w=2.0 Tn/m), Barra 3 (col inclinada w=0)
+    # Cargas: Barra 1 (w=1.5), Barra 2 (w=2.0), Barra 3 (w=0)
     st.subheader("⚡ Cargas Distribuidas Equivalentes en los Elementos (w en Tn/m)")
     cargas_default = pd.DataFrame({
         "Barra": [1, 2, 3],
         "w (Tn/m)": [1.5, 2.0, 0.0]
     })
-    cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_e1_real", use_container_width=True)
+    cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_ej1_real", use_container_width=True)
 
     st.markdown("---")
 
