@@ -7,7 +7,6 @@ st.set_page_config(page_title="SYNCRET - Pórticos Planos", page_icon="🏛️",
 
 st.markdown("""
 <style>
-    /* Margen superior ajustado para que el botón de regresar se vea completo */
     .block-container { padding-top: 3.5rem !important; }
     .stApp { 
         background: linear-gradient(rgba(9, 13, 22, 0.92), rgba(20, 27, 45, 0.95)), 
@@ -58,7 +57,7 @@ if st.session_state.pagina == 'home':
             ir_a('ej_3')
 
 # ==========================================
-# VISTA: EJERCICIO DE PRUEBA
+# VISTA: EJERCICIO DE PRUEBA (Original intacto)
 # ==========================================
 elif st.session_state.pagina == 'ej_prueba':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -70,12 +69,10 @@ elif st.session_state.pagina == 'ej_prueba':
     > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
     """)
 
-    if os.path.exists("enunciado_prueba.jpg"):
+    if os.path.exists("enunciado.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
         with col_e2:
-            st.image("enunciado_prueba.jpg", caption="Esquema del Pórtico - Ejercicio de Prueba", use_container_width=True)
-    else:
-        st.warning("⚠️ Sube la imagen del enunciado como `enunciado_prueba.jpg` a tu repositorio de GitHub.")
+            st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio de Prueba", use_container_width=True)
 
     st.markdown("---")
 
@@ -331,7 +328,7 @@ elif st.session_state.pagina == 'ej_prueba':
             st.error(f"❌ Error en el cálculo estructural: {e}")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Nuevo pórtico con columna inclinada)
+# VISTA: EJERCICIO 01 (Nuevo pórtico real con columna inclinada)
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -343,14 +340,8 @@ elif st.session_state.pagina == 'ej_1':
     > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
     """)
 
-    # Carga específica del enunciado para el Ejercicio 01
-    if os.path.exists("enunciado_1.jpg"):
-        col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
-        with col_e2:
-            st.image("enunciado_1.jpg", caption="Esquema del Pórtico - Ejercicio 01", use_container_width=True)
-    else:
-        st.warning("⚠️ Sube la imagen del enunciado de este ejercicio como `enunciado_1.jpg` a tu repositorio de GitHub.")
-
+    # No se cargan imágenes de gráficos ni enunciado todavía para el Ejercicio 01, como pediste.
+    st.info("ℹ️ Datos geométricos y de cargas configurados para el Ejercicio 01 (Pórtico con columna inclinada).")
     st.markdown("---")
 
     # --- DATOS REALES DEL EJERCICIO 01 ---
@@ -379,7 +370,7 @@ elif st.session_state.pagina == 'ej_1':
     })
     barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ej1_real", use_container_width=True)
 
-    # Cargas: Barra 1 (w=1.5), Barra 2 (w=2.0), Barra 3 (w=0)
+    # Cargas: Barra 1 (columna izq trapezoidal w_prom=1.5), Barra 2 (viga w=2.0), Barra 3 (col incl=0)
     st.subheader("⚡ Cargas Distribuidas Equivalentes en los Elementos (w en Tn/m)")
     cargas_default = pd.DataFrame({
         "Barra": [1, 2, 3],
@@ -634,31 +625,7 @@ elif st.session_state.pagina == 'ej_1':
 
             with tab8:
                 st.subheader("🎨 Galería de Diagramas y Resultados Oficiales")
-                st.markdown("Visualización automática de los gráficos estructurales del análisis:")
-                
-                col1, col2 = st.columns(2)
-                
-                def mostrar_imagen(nombre_base, titulo):
-                    path = None
-                    for ext in [".jpg", ".png", ".jpeg"]:
-                        if os.path.exists(nombre_base + ext):
-                            path = nombre_base + ext
-                            break
-                    st.markdown(f"**{titulo}**")
-                    if path:
-                        st.image(path, use_container_width=True)
-                    else:
-                        st.warning(f"⚠️ Falta subir el archivo `{nombre_base}.jpg` al repositorio de GitHub.")
-
-                with col1:
-                    mostrar_imagen("modelo", "1. Modelo Geométrico y Cargas")
-                    mostrar_imagen("cortante", "3. Diagrama de Esfuerzo Cortante (V)")
-                    mostrar_imagen("deformacion", "5. Diagrama de Deformación")
-                    
-                with col2:
-                    mostrar_imagen("axial", "2. Diagrama de Fuerza Axial (N)")
-                    mostrar_imagen("momento", "4. Diagrama de Momento Flector (M)")
-                    mostrar_imagen("cuerpo_libre", "6. Diagrama de Cuerpo Libre (Reacciones)")
+                st.info("💡 Aún no se han cargado imágenes para los gráficos de este Ejercicio 01. Cuando las tengas, puedes subirlas a GitHub.")
 
         except Exception as e:
             st.error(f"❌ Error en el cálculo estructural: {e}")
