@@ -127,6 +127,7 @@ elif st.session_state.pagina == 'ej_1':
         matrices_locales = {}
         matrices_globales = {}
         angulos_elementos = {}
+        conexiones_elementos = {}
         elementos_info = []
         
         for _, barra in barras_clean.iterrows():
@@ -137,7 +138,9 @@ elif st.session_state.pagina == 'ej_1':
             n2 = nodos_clean[nodos_clean["Nodo"] == n2_id].iloc[0]
             dx, dy = n2["X (m)"] - n1["X (m)"], n2["Y (m)"] - n1["Y (m)"]
             L = np.sqrt(dx**2 + dy**2)
-            angulos_elementos[b_id] = round(np.degrees(np.arctan2(dy, dx)), 2)
+            ang = round(np.degrees(np.arctan2(dy, dx)), 2)
+            angulos_elementos[b_id] = ang
+            conexiones_elementos[b_id] = (n1_id, n2_id)
             
             c, s = dx / L, dy / L
             b, h, E = barra["Base (m)"], barra["Altura (m)"], barra["E (Tn/m2)"]
@@ -184,8 +187,9 @@ elif st.session_state.pagina == 'ej_1':
         fuerzas_internas = []
         for el in elementos_info:
             b_id = el["Barra"]
-            n1 = nodos_clean[nodos_clean["Nodo"] == barras_clean[barras_clean["Barra"] == b_id]["Nodo_Ini"].values[0]].iloc[0]
-            n2 = nodos_clean[nodos_clean["Nodo"] == barras_clean[barras_clean["Barra"] == b_id]["Nodo_Fin"].values[0]].iloc[0]
+            n1_id, n2_id = conexiones_elementos[b_id]
+            n1 = nodos_clean[nodos_clean["Nodo"] == n1_id].iloc[0]
+            n2 = nodos_clean[nodos_clean["Nodo"] == n2_id].iloc[0]
             dx, dy = n2["X (m)"] - n1["X (m)"], n2["Y (m)"] - n1["Y (m)"]
             L = np.sqrt(dx**2 + dy**2)
             c, s = dx/L, dy/L
@@ -212,20 +216,45 @@ elif st.session_state.pagina == 'ej_1':
         ])
         
         with tab1:
+            st.subheader("📐 Resumen de Geometría y Elementos")
             st.dataframe(nodos_df, hide_index=True, use_container_width=True)
             st.dataframe(barras_df, hide_index=True, use_container_width=True)
+            st.markdown("---")
+            st.write("**Ángulos de inclinación ($\\theta$) de cada elemento:**")
+            for b_id, ang in angulos_elementos.items():
+                n_ini, n_fin = conexiones_elementos[b_id]
+                st.info(f"📌 **Barra {b_id}** (Nodo {n_ini} ➔ Nodo {n_fin}): Ángulo $\\theta = {ang}°$ con respecto al eje global X.")
+                
         with tab2:
-            st.info(f"GDL Libres: {gdl_libres}")
-            st.info(f"GDL Restringidos: {gdl_restringidos}")
+            st.subheader("📋 Partición de Grados de Libertad (GDL)")
+            st.info(f"📌 **GDL Libres:** {gdl_libres}")
+            st.info(f"📌 **GDL Restringidos:** {gdl_restringidos}")
+            
         with tab3:
+            st.subheader("🧮 Matrices de Rigidez Local ($k$) por Elemento")
             for bid, kmat in matrices_locales.items():
-                st.write(f"Barra {bid}:")
+                n_ini, n_fin = conexiones_elementos[bid]
+                ang = angulos_elementos[bid]
+                st.write(f"**Barra {bid} (Nodo {n_ini} ➔ Nodo {n_fin} | Ángulo $\\theta = {ang}°$):**")
                 st.dataframe(pd.DataFrame(np.round(kmat, 2)), use_container_width=True)
+                
         with tab4:
+            st.subheader("🌐 Matrices de Rigidez Global ($Ke$) por Elemento")
             for bid, kgmat in matrices_globales.items():
-                st.write(f"Barra {bid}:")
+                n_ini, n_fin = conexiones_elementos[bid]
+                ang = angulos_elementos[bid]
+                st.write(f"**Barra {bid} (Nodo {n_ini} ➔ Nodo {n_fin} | Ángulo $\\theta = {ang}°$):**")
                 st.dataframe(pd.DataFrame(np.round(kgmat, 2)), use_container_width=True)
+                
         with tab5:
+            st.subheader("📊 Matriz Global del Sistema Particionada ($K_{LL}, K_{LR}, K_{RL}, K_{RR}$)")
+            st.markdown("""
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 14px; font-weight: bold;">
+                <div style="background-color: #1e3a8a; padding: 8px 15px; border-radius: 8px; color: #93c5fd;">🟦 K_LL (Libres - Libres)</div>
+                <div style="background-color: #7c2d12; padding: 8px 15px; border-radius: 8px; color: #fed7aa;">🟧 K_LR / K_RL (Acoplamiento)</div>
+                <div style="background-color: #3b0764; padding: 8px 15px; border-radius: 8px; color: #d8b4fe;">🟪 K_RR (Restringidos - Restringidos)</div>
+            </div>
+            """, unsafe_allow_html=True)
             gdl_ordenados = gdl_libres + gdl_restringidos
             K_part = K_global[np.ix_(gdl_ordenados, gdl_ordenados)]
             nombres = [f"GDL {i+1} (Libre)" if i in gdl_libres else f"GDL {i+1} (Rest.)" for i in gdl_ordenados]
@@ -234,18 +263,24 @@ elif st.session_state.pagina == 'ej_1':
                 r_l = "Libre" in row.name
                 return ['background-color: #1e3a8a; color: #93c5fd;' if r_l and "Libre" in c else ('background-color: #3b0764; color: #d8b4fe;' if not r_l and "Rest." in c else 'background-color: #7c2d12; color: #fed7aa;') for c in row.index]
             st.dataframe(df_kp.style.apply(color_q, axis=1), use_container_width=True)
+            
         with tab6:
+            st.subheader("📉 Desplazamientos Nodales y Reacciones")
             col_a, col_b = st.columns(2)
             with col_a:
-                desp_df = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Dx": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)], "Dy": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)], "Giro": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]})
+                st.write("**Desplazamientos Nodales:**")
+                desp_df = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)], "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)], "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]})
                 st.dataframe(desp_df, hide_index=True, use_container_width=True)
             with col_b:
-                reac_df = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Rx": np.round(R_global[0::3], 3), "Ry": np.round(R_global[1::3], 3), "Mz": np.round(R_global[2::3], 3)})
+                st.write("**Reacciones en los Apoyos:**")
+                reac_df = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Rx (Tn)": np.round(R_global[0::3], 3), "Ry (Tn)": np.round(R_global[1::3], 3), "Mz (Tn.m)": np.round(R_global[2::3], 3)})
                 reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
                 st.dataframe(reac_df, hide_index=True, use_container_width=True)
+                
         with tab7:
-            st.subheader("⚖️ Fuerzas Internas en los Extremos de los Elementos")
+            st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas en los Elementos")
             st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
+            
         with tab8:
             st.subheader("🎨 Galería de Diagramas - Ejercicio 01")
             g_col1, g_col2 = st.columns(2)
@@ -329,6 +364,7 @@ elif st.session_state.pagina == 'ej_2':
         matrices_locales = {}
         matrices_globales = {}
         angulos_elementos = {}
+        conexiones_elementos = {}
         elementos_info = []
         
         for _, barra in barras_clean.iterrows():
@@ -339,7 +375,9 @@ elif st.session_state.pagina == 'ej_2':
             n2 = nodos_clean[nodos_clean["Nodo"] == n2_id].iloc[0]
             dx, dy = n2["X (m)"] - n1["X (m)"], n2["Y (m)"] - n1["Y (m)"]
             L = np.sqrt(dx**2 + dy**2)
-            angulos_elementos[b_id] = round(np.degrees(np.arctan2(dy, dx)), 2)
+            ang = round(np.degrees(np.arctan2(dy, dx)), 2)
+            angulos_elementos[b_id] = ang
+            conexiones_elementos[b_id] = (n1_id, n2_id)
             
             c, s = dx / L, dy / L
             b, h, E = barra["Base (m)"], barra["Altura (m)"], barra["E (Tn/m2)"]
@@ -394,8 +432,9 @@ elif st.session_state.pagina == 'ej_2':
         fuerzas_internas_2 = []
         for el in elementos_info:
             b_id = el["Barra"]
-            n1 = nodos_clean[nodos_clean["Nodo"] == barras_clean[barras_clean["Barra"] == b_id]["Nodo_Ini"].values[0]].iloc[0]
-            n2 = nodos_clean[nodos_clean["Nodo"] == barras_clean[barras_clean["Barra"] == b_id]["Nodo_Fin"].values[0]].iloc[0]
+            n1_id, n2_id = conexiones_elementos[b_id]
+            n1 = nodos_clean[nodos_clean["Nodo"] == n1_id].iloc[0]
+            n2 = nodos_clean[nodos_clean["Nodo"] == n2_id].iloc[0]
             dx, dy = n2["X (m)"] - n1["X (m)"], n2["Y (m)"] - n1["Y (m)"]
             L = np.sqrt(dx**2 + dy**2)
             c, s = dx/L, dy/L
@@ -431,20 +470,45 @@ elif st.session_state.pagina == 'ej_2':
         ])
         
         with tab1:
+            st.subheader("📐 Resumen de Geometría y Elementos")
             st.dataframe(nodos_df, hide_index=True, use_container_width=True)
             st.dataframe(barras_df, hide_index=True, use_container_width=True)
+            st.markdown("---")
+            st.write("**Ángulos de inclinación ($\\theta$) de cada elemento:**")
+            for b_id, ang in angulos_elementos.items():
+                n_ini, n_fin = conexiones_elementos[b_id]
+                st.info(f"📌 **Barra {b_id}** (Nodo {n_ini} ➔ Nodo {n_fin}): Ángulo $\\theta = {ang}°$ con respecto al eje global X.")
+                
         with tab2:
-            st.info(f"GDL Libres: {gdl_libres}")
-            st.info(f"GDL Restringidos: {gdl_restringidos}")
+            st.subheader("📋 Partición de Grados de Libertad (GDL)")
+            st.info(f"📌 **GDL Libres:** {gdl_libres}")
+            st.info(f"📌 **GDL Restringidos:** {gdl_restringidos}")
+            
         with tab3:
+            st.subheader("🧮 Matrices de Rigidez Local ($k$) por Elemento")
             for bid, kmat in matrices_locales.items():
-                st.write(f"Barra {bid}:")
+                n_ini, n_fin = conexiones_elementos[bid]
+                ang = angulos_elementos[bid]
+                st.write(f"**Barra {bid} (Nodo {n_ini} ➔ Nodo {n_fin} | Ángulo $\\theta = {ang}°$):**")
                 st.dataframe(pd.DataFrame(np.round(kmat, 2)), use_container_width=True)
+                
         with tab4:
+            st.subheader("🌐 Matrices de Rigidez Global ($Ke$) por Elemento")
             for bid, kgmat in matrices_globales.items():
-                st.write(f"Barra {bid}:")
+                n_ini, n_fin = conexiones_elementos[bid]
+                ang = angulos_elementos[bid]
+                st.write(f"**Barra {bid} (Nodo {n_ini} ➔ Nodo {n_fin} | Ángulo $\\theta = {ang}°$):**")
                 st.dataframe(pd.DataFrame(np.round(kgmat, 2)), use_container_width=True)
+                
         with tab5:
+            st.subheader("📊 Matriz Global del Sistema Particionada ($K_{LL}, K_{LR}, K_{RL}, K_{RR}$)")
+            st.markdown("""
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 14px; font-weight: bold;">
+                <div style="background-color: #1e3a8a; padding: 8px 15px; border-radius: 8px; color: #93c5fd;">🟦 K_LL (Libres - Libres)</div>
+                <div style="background-color: #7c2d12; padding: 8px 15px; border-radius: 8px; color: #fed7aa;">🟧 K_LR / K_RL (Acoplamiento)</div>
+                <div style="background-color: #3b0764; padding: 8px 15px; border-radius: 8px; color: #d8b4fe;">🟪 K_RR (Restringidos - Restringidos)</div>
+            </div>
+            """, unsafe_allow_html=True)
             gdl_ordenados = gdl_libres + gdl_restringidos
             K_part = K_global[np.ix_(gdl_ordenados, gdl_ordenados)]
             nombres = [f"GDL {i+1} (Libre)" if i in gdl_libres else f"GDL {i+1} (Rest.)" for i in gdl_ordenados]
@@ -453,18 +517,24 @@ elif st.session_state.pagina == 'ej_2':
                 r_l = "Libre" in row.name
                 return ['background-color: #1e3a8a; color: #93c5fd;' if r_l and "Libre" in c else ('background-color: #3b0764; color: #d8b4fe;' if not r_l and "Rest." in c else 'background-color: #7c2d12; color: #fed7aa;') for c in row.index]
             st.dataframe(df_kp.style.apply(color_q, axis=1), use_container_width=True)
+            
         with tab6:
+            st.subheader("📉 Desplazamientos Nodales y Reacciones")
             col_a, col_b = st.columns(2)
             with col_a:
-                desp_df = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Dx": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)], "Dy": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)], "Giro": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]})
+                st.write("**Desplazamientos Nodales:**")
+                desp_df = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)], "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)], "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]})
                 st.dataframe(desp_df, hide_index=True, use_container_width=True)
             with col_b:
-                reac_df = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Rx": np.round(R_global[0::3], 3), "Ry": np.round(R_global[1::3], 3), "Mz": np.round(R_global[2::3], 3)})
+                st.write("**Reacciones en los Apoyos:**")
+                reac_df = pd.DataFrame({"Nodo": nodos_clean["Nodo"].astype(int), "Rx (Tn)": np.round(R_global[0::3], 3), "Ry (Tn)": np.round(R_global[1::3], 3), "Mz (Tn.m)": np.round(R_global[2::3], 3)})
                 reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
                 st.dataframe(reac_df, hide_index=True, use_container_width=True)
+                
         with tab7:
-            st.subheader("⚖️ Fuerzas Internas en los Extremos de los Elementos")
+            st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas en los Elementos")
             st.dataframe(pd.DataFrame(fuerzas_internas_2), hide_index=True, use_container_width=True)
+            
         with tab8:
             st.subheader("🎨 Galería de Diagramas - Ejercicio 02")
             g_col1, g_col2 = st.columns(2)
