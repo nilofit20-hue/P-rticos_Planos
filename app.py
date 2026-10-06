@@ -22,334 +22,380 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 SYNCRET: Análisis Matricial de Pórticos Planos</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #93c5fd;'>Método de Rigideces • Análisis Estructural II • UNS</p>", unsafe_allow_html=True)
-st.markdown("---")
+# --- CONTROL DE NAVEGACIÓN POR ESTADOS ---
+if 'pagina' not in st.session_state:
+    st.session_state.pagina = 'home'
 
-# --- ENUNCIADO OFICIAL Y ESQUEMA DEL PROBLEMA ---
-st.markdown("""
-> **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
-""")
+def ir_a(menu):
+    st.session_state.pagina = menu
 
-# Mostrar automáticamente la imagen del enunciado si está subida al repositorio
-if os.path.exists("enunciado.jpg"):
-    col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
-    with col_e2:
-        st.image("enunciado.jpg", caption="Esquema del Pórtico - Enunciado del Ejercicio", use_container_width=True)
-elif os.path.exists("enunciado.png"):
-    col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
-    with col_e2:
-        st.image("enunciado.png", caption="Esquema del Pórtico - Enunciado del Ejercicio", use_container_width=True)
-else:
-    st.warning("⚠️ Sube la imagen del enunciado nombrada como `enunciado.jpg` a tu repositorio de GitHub para que aparezca aquí.")
+# ==========================================
+# PÁGINA PRINCIPAL / MENÚ DE SELECCIÓN
+# ==========================================
+if st.session_state.pagina == 'home':
+    st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 SYNCRET: Análisis Matricial de Pórticos Planos</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #93c5fd;'>Método de Rigideces • Análisis Estructural II • UNS</p>", unsafe_allow_html=True)
+    st.markdown("---")
+    
+    st.markdown("<h3 style='text-align: center; color: #f7fafc;'>📂 Selecciona el Ejercicio a Evaluar</h3>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
 
-st.markdown("---")
+    col1, col2 = st.columns(2, gap="large")
+    
+    with col1:
+        if st.button("📌 EJERCICIO 01", use_container_width=True):
+            ir_a('ej_1')
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("📌 EJERCICIO 03", use_container_width=True):
+            ir_a('ej_3')
+            
+    with col2:
+        if st.button("📌 EJERCICIO 02", use_container_width=True):
+            ir_a('ej_2')
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("📌 EJERCICIO 04", use_container_width=True):
+            ir_a('ej_4')
 
-# --- ENTRADA DE DATOS: NODOS ---
-st.subheader("📍 Coordenadas Nodales y Restricciones")
-nodos_default = pd.DataFrame({
-    "Nodo": [1, 2, 3],
-    "X (m)": [0.0, 0.0, 4.0],
-    "Y (m)": [0.0, 4.0, 4.0],
-    "Restringido_X": [True, False, True],
-    "Restringido_Y": [True, False, True],
-    "Restringido_Giro": [False, False, True]
-})
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v23", use_container_width=True)
-
-# --- ENTRADA DE DATOS: BARRAS ---
-st.subheader("🔗 Conectividad y Propiedades de Elementos")
-barras_default = pd.DataFrame({
-    "Barra": [1, 2],
-    "Nodo_Ini": [1, 2],
-    "Nodo_Fin": [2, 3],
-    "Base (m)": [0.30, 0.30],
-    "Altura (m)": [0.40, 0.35],
-    "E (Tn/m2)": [1900000.0, 1900000.0]
-})
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v23", use_container_width=True)
-
-# --- CARGAS DISTRIBUIDAS ---
-st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
-cargas_default = pd.DataFrame({
-    "Barra": [1, 2],
-    "w (Tn/m)": [1.0, 3.0]
-})
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v23", use_container_width=True)
-
-st.markdown("---")
-
-if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width=True):
-    try:
-        nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
-        barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
+# ==========================================
+# VISTA DEL EJERCICIO 01
+# ==========================================
+elif st.session_state.pagina == 'ej_1':
+    if st.button("⬅️ Volver al Menú Principal"):
+        ir_a('home')
+        st.rerun()
         
-        n_nodos = len(nodos_clean)
-        n_gdl = 3 * n_nodos
-        nodo_idx = {int(row["Nodo"]): i for i, row in nodos_clean.iterrows()}
-        
-        gdl_restringidos = []
-        for i, row in nodos_clean.iterrows():
-            idx = nodo_idx[row["Nodo"]]
-            if row["Restringido_X"]: gdl_restringidos.append(3*idx)
-            if row["Restringido_Y"]: gdl_restringidos.append(3*idx + 1)
-            if row["Restringido_Giro"]: gdl_restringidos.append(3*idx + 2)
+    st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 01</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
+    """)
+
+    if os.path.exists("enunciado_1.jpg"):
+        col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
+        with col_e2:
+            st.image("enunciado_1.jpg", caption="Esquema del Pórtico - Ejercicio 01", use_container_width=True)
+    elif os.path.exists("enunciado.jpg"):
+        col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
+        with col_e2:
+            st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio 01", use_container_width=True)
+
+    st.markdown("---")
+
+    # --- DATOS EJERCICIO 01 ---
+    st.subheader("📍 Coordenadas Nodales y Restricciones")
+    nodos_default = pd.DataFrame({
+        "Nodo": [1, 2, 3, 4],
+        "X (m)": [0.0, 0.0, 5.0, 7.5],
+        "Y (m)": [0.0, 3.0, 3.0, 0.0],
+        "Restringido_X": [True, False, False, True],
+        "Restringido_Y": [True, False, False, True],
+        "Restringido_Giro": [True, False, False, True]
+    })
+    nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_e1", use_container_width=True)
+
+    st.subheader("🔗 Conectividad y Propiedades de Elementos")
+    barras_default = pd.DataFrame({
+        "Barra": [1, 2, 3],
+        "Nodo_Ini": [1, 2, 3],
+        "Nodo_Fin": [2, 3, 4],
+        "Base (m)": [0.30, 0.30, 0.30],
+        "Altura (m)": [0.50, 0.45, 0.50],
+        "E (Tn/m2)": [2173706.5, 2173706.5, 2173706.5]
+    })
+    barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_e1", use_container_width=True)
+
+    st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
+    cargas_default = pd.DataFrame({
+        "Barra": [1, 2, 3],
+        "w (Tn/m)": [1.5, 2.0, 0.0]
+    })
+    cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_e1", use_container_width=True)
+
+    st.markdown("---")
+
+    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO 01", use_container_width=True):
+        try:
+            nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
+            barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
             
-        gdl_libres = [i for i in range(n_gdl) if i not in gdl_restringidos]
-        
-        K_global = np.zeros((n_gdl, n_gdl))
-        F_equivalente_global = np.zeros(n_gdl)
-        
-        elementos_info = []
-        fuerzas_internas = []
-        matrices_locales = {}
-        matrices_globales = {}
-        
-        for _, barra in barras_clean.iterrows():
-            b_id = int(barra["Barra"])
-            n1_id = int(barra["Nodo_Ini"])
-            n2_id = int(barra["Nodo_Fin"])
+            n_nodos = len(nodos_clean)
+            n_gdl = 3 * n_nodos
+            nodo_idx = {int(row["Nodo"]): i for i, row in nodos_clean.iterrows()}
             
-            n1 = nodos_clean[nodos_clean["Nodo"] == n1_id].iloc[0]
-            n2 = nodos_clean[nodos_clean["Nodo"] == n2_id].iloc[0]
+            gdl_restringidos = []
+            for i, row in nodos_clean.iterrows():
+                idx = nodo_idx[row["Nodo"]]
+                if row["Restringido_X"]: gdl_restringidos.append(3*idx)
+                if row["Restringido_Y"]: gdl_restringidos.append(3*idx + 1)
+                if row["Restringido_Giro"]: gdl_restringidos.append(3*idx + 2)
+                
+            gdl_libres = [i for i in range(n_gdl) if i not in gdl_restringidos]
             
-            dx = n2["X (m)"] - n1["X (m)"]
-            dy = n2["Y (m)"] - n1["Y (m)"]
-            L = np.sqrt(dx**2 + dy**2)
+            K_global = np.zeros((n_gdl, n_gdl))
+            F_equivalente_global = np.zeros(n_gdl)
             
-            cos_phi = dx / L
-            sin_phi = dy / L
+            elementos_info = []
+            fuerzas_internas = []
+            matrices_locales = {}
+            matrices_globales = {}
             
-            b = barra["Base (m)"]
-            h = barra["Altura (m)"]
-            E = barra["E (Tn/m2)"]
-            A = b * h
-            I = (b * h**3) / 12.0
-            
-            ae_l = (A * E) / L
-            ei = E * I
-            
-            k11 = ae_l
-            k22 = 12.0 * ei / L**3
-            k23 = 6.0 * ei / L**2
-            k33 = 4.0 * ei / L
-            k36 = 2.0 * ei / L
-            
-            K_L = np.zeros((6, 6))
-            K_L[0,0] = k11; K_L[0,3] = -k11; K_L[3,0] = -k11; K_L[3,3] = k11
-            K_L[1,1] = k22; K_L[1,2] = k23; K_L[1,4] = -k22; K_L[1,5] = k23
-            K_L[2,1] = k23; K_L[2,2] = k33; K_L[2,4] = -k23; K_L[2,5] = k36
-            K_L[4,1] = -k22; K_L[4,2] = -k23; K_L[4,4] = k22; K_L[4,5] = -k23
-            K_L[5,1] = k23; K_L[5,2] = k36; K_L[5,4] = -k23; K_L[5,5] = k33
-            
-            matrices_locales[b_id] = K_L.copy()
-            
-            c = cos_phi
-            s = sin_phi
-            Tg = np.array([
-                [ c,  s, 0,  0,  0, 0],
-                [-s,  c, 0,  0,  0, 0],
-                [ 0,  0, 1,  0,  0, 0],
-                [ 0,  0, 0,  c,  s, 0],
-                [ 0,  0, 0, -s,  c, 0],
-                [ 0,  0, 0,  0,  0, 1]
-            ])
-            
-            K_g_elem = Tg.T @ K_L @ Tg
-            matrices_globales[b_id] = K_g_elem.copy()
-            
-            idx1 = nodo_idx[n1_id]
-            idx2 = nodo_idx[n2_id]
-            gdl_elem = [3*idx1, 3*idx1+1, 3*idx1+2, 3*idx2, 3*idx2+1, 3*idx2+2]
-            
-            for i in range(6):
-                for j in range(6):
-                    K_global[gdl_elem[i], gdl_elem[j]] += K_g_elem[i, j]
+            for _, barra in barras_clean.iterrows():
+                b_id = int(barra["Barra"])
+                n1_id = int(barra["Nodo_Ini"])
+                n2_id = int(barra["Nodo_Fin"])
+                
+                n1 = nodos_clean[nodos_clean["Nodo"] == n1_id].iloc[0]
+                n2 = nodos_clean[nodos_clean["Nodo"] == n2_id].iloc[0]
+                
+                dx = n2["X (m)"] - n1["X (m)"]
+                dy = n2["Y (m)"] - n1["Y (m)"]
+                L = np.sqrt(dx**2 + dy**2)
+                
+                cos_phi = dx / L
+                sin_phi = dy / L
+                
+                b = barra["Base (m)"]
+                h = barra["Altura (m)"]
+                E = barra["E (Tn/m2)"]
+                A = b * h
+                I = (b * h**3) / 12.0
+                
+                ae_l = (A * E) / L
+                ei = E * I
+                
+                k11 = ae_l
+                k22 = 12.0 * ei / L**3
+                k23 = 6.0 * ei / L**2
+                k33 = 4.0 * ei / L
+                k36 = 2.0 * ei / L
+                
+                K_L = np.zeros((6, 6))
+                K_L[0,0] = k11; K_L[0,3] = -k11; K_L[3,0] = -k11; K_L[3,3] = k11
+                K_L[1,1] = k22; K_L[1,2] = k23; K_L[1,4] = -k22; K_L[1,5] = k23
+                K_L[2,1] = k23; K_L[2,2] = k33; K_L[2,4] = -k23; K_L[2,5] = k36
+                K_L[4,1] = -k22; K_L[4,2] = -k23; K_L[4,4] = k22; K_L[4,5] = -k23
+                K_L[5,1] = k23; K_L[5,2] = k36; K_L[5,4] = -k23; K_L[5,5] = k33
+                
+                matrices_locales[b_id] = K_L.copy()
+                
+                c = cos_phi
+                s = sin_phi
+                Tg = np.array([
+                    [ c,  s, 0,  0,  0, 0],
+                    [-s,  c, 0,  0,  0, 0],
+                    [ 0,  0, 1,  0,  0, 0],
+                    [ 0,  0, 0,  c,  s, 0],
+                    [ 0,  0, 0, -s,  c, 0],
+                    [ 0,  0, 0,  0,  0, 1]
+                ])
+                
+                K_g_elem = Tg.T @ K_L @ Tg
+                matrices_globales[b_id] = K_g_elem.copy()
+                
+                idx1 = nodo_idx[n1_id]
+                idx2 = nodo_idx[n2_id]
+                gdl_elem = [3*idx1, 3*idx1+1, 3*idx1+2, 3*idx2, 3*idx2+1, 3*idx2+2]
+                
+                for i in range(6):
+                    for j in range(6):
+                        K_global[gdl_elem[i], gdl_elem[j]] += K_g_elem[i, j]
+                        
+                w_val = cargas_df[cargas_df["Barra"] == b_id]["w (Tn/m)"].values[0]
+                Fe_local = np.array([
+                    0.0,
+                    (w_val * L) / 2.0,
+                    (w_val * L**2) / 12.0,
+                    0.0,
+                    (w_val * L) / 2.0,
+                    -(w_val * L**2) / 12.0
+                ])
+                
+                Fe_global = Tg.T @ Fe_local
+                for i in range(6):
+                    F_equivalente_global[gdl_elem[i]] += Fe_global[i]
                     
-            w_val = cargas_df[cargas_df["Barra"] == b_id]["w (Tn/m)"].values[0]
-            Fe_local = np.array([
-                0.0,
-                (w_val * L) / 2.0,
-                (w_val * L**2) / 12.0,
-                0.0,
-                (w_val * L) / 2.0,
-                -(w_val * L**2) / 12.0
+                elementos_info.append({
+                    "Barra": b_id, "N1": n1_id, "N2": n2_id, "L": L, "w": w_val, "gdl": gdl_elem
+                })
+
+            K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
+            F_LL = -F_equivalente_global[gdl_libres]
+            
+            U_libres = np.linalg.pinv(K_LL) @ F_LL
+            U_global = np.zeros(n_gdl)
+            U_global[gdl_libres] = U_libres
+            
+            R_global = K_global @ U_global + F_equivalente_global
+
+            for el in elementos_info:
+                b_id = el["Barra"]
+                n1 = nodos_clean[nodos_clean["Nodo"] == el["N1"]].iloc[0]
+                n2 = nodos_clean[nodos_clean["Nodo"] == el["N2"]].iloc[0]
+                dx = n2["X (m)"] - n1["X (m)"]
+                dy = n2["Y (m)"] - n1["Y (m)"]
+                L = np.sqrt(dx**2 + dy**2)
+                c, s = dx/L, dy/L
+                
+                b_row = barras_clean[barras_clean["Barra"] == b_id].iloc[0]
+                A = b_row["Base (m)"] * b_row["Altura (m)"]
+                I = (b_row["Base (m)"] * b_row["Altura (m)"]**3) / 12.0
+                E = b_row["E (Tn/m2)"]
+                ae_l, ei = (A * E) / L, E * I
+                
+                k11 = ae_l
+                k22 = 12.0 * ei / L**3
+                k23 = 6.0 * ei / L**2
+                k33 = 4.0 * ei / L
+                k36 = 2.0 * ei / L
+                
+                K_L = np.zeros((6, 6))
+                K_L[0,0] = k11; K_L[0,3] = -k11; K_L[3,0] = -k11; K_L[3,3] = k11
+                K_L[1,1] = k22; K_L[1,2] = k23; K_L[1,4] = -k22; K_L[1,5] = k23
+                K_L[2,1] = k23; K_L[2,2] = k33; K_L[2,4] = -k23; K_L[2,5] = k36
+                K_L[4,1] = -k22; K_L[4,2] = -k23; K_L[4,4] = k22; K_L[4,5] = -k23
+                K_L[5,1] = k23; K_L[5,2] = k36; K_L[5,4] = -k23; K_L[5,5] = k33
+                
+                Tg = np.array([
+                    [ c,  s, 0,  0,  0, 0],
+                    [-s,  c, 0,  0,  0, 0],
+                    [ 0,  0, 1,  0,  0, 0],
+                    [ 0,  0, 0,  c,  s, 0],
+                    [ 0,  0, 0, -s,  c, 0],
+                    [ 0,  0, 0,  0,  0, 1]
+                ])
+                
+                u_global_elem = U_global[el["gdl"]]
+                u_local_elem = Tg @ u_global_elem
+                Fe_local = np.array([0.0, (el["w"] * L)/2.0, (el["w"] * L**2)/12.0, 0.0, (el["w"] * L)/2.0, -(el["w"] * L**2)/12.0])
+                f_local = K_L @ u_local_elem + Fe_local
+                
+                fuerzas_internas.append({
+                    "Barra": b_id,
+                    "Axial Ini (Tn)": round(f_local[0], 3),
+                    "Cortante Ini (Tn)": round(f_local[1], 3),
+                    "Momento Ini (Tn.m)": round(f_local[2], 3),
+                    "Axial Fin (Tn)": round(f_local[3], 3),
+                    "Cortante Fin (Tn)": round(f_local[4], 3),
+                    "Momento Fin (Tn.m)": round(f_local[5], 3)
+                })
+
+            st.balloons()
+            st.success("¡Cálculo matricial procesado con éxito!")
+
+            # --- 8 PESTAÑAS MODULARES ---
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+                "📐 Geometría y Elementos", 
+                "📋 Partición de GDL", 
+                "🧮 Matrices Locales (k)", 
+                "🌐 Matrices Globales (Ke)", 
+                "📊 Matriz Global Ensamblada", 
+                "📉 Desplazamientos y Reacciones", 
+                "⚖️ Equilibrio Estático", 
+                "🎨 GRÁFICOS"
             ])
             
-            Fe_global = Tg.T @ Fe_local
-            for i in range(6):
-                F_equivalente_global[gdl_elem[i]] += Fe_global[i]
+            with tab1:
+                st.subheader("📐 Resumen de Geometría y Propiedades")
+                st.write("**Nodos y Coordenadas:**")
+                st.dataframe(nodos_clean, hide_index=True, use_container_width=True)
+                st.write("**Elementos y Secciones:**")
+                st.dataframe(barras_clean, hide_index=True, use_container_width=True)
                 
-            elementos_info.append({
-                "Barra": b_id, "N1": n1_id, "N2": n2_id, "L": L, "w": w_val, "gdl": gdl_elem
-            })
-
-        # --- RESOLUCIÓN MATRICIAL ---
-        K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
-        F_LL = -F_equivalente_global[gdl_libres]
-        
-        U_libres = np.linalg.pinv(K_LL) @ F_LL
-        U_global = np.zeros(n_gdl)
-        U_global[gdl_libres] = U_libres
-        
-        R_global = K_global @ U_global + F_equivalente_global
-
-        for el in elementos_info:
-            b_id = el["Barra"]
-            n1 = nodos_clean[nodos_clean["Nodo"] == el["N1"]].iloc[0]
-            n2 = nodos_clean[nodos_clean["Nodo"] == el["N2"]].iloc[0]
-            dx = n2["X (m)"] - n1["X (m)"]
-            dy = n2["Y (m)"] - n1["Y (m)"]
-            L = np.sqrt(dx**2 + dy**2)
-            c, s = dx/L, dy/L
-            
-            b_row = barras_clean[barras_clean["Barra"] == b_id].iloc[0]
-            A = b_row["Base (m)"] * b_row["Altura (m)"]
-            I = (b_row["Base (m)"] * b_row["Altura (m)**3"]) / 12.0 if "Altura (m)**3" in b_row else (b_row["Base (m)"] * b_row["Altura (m)"]**3) / 12.0
-            E = b_row["E (Tn/m2)"]
-            ae_l, ei = (A * E) / L, E * I
-            
-            k11 = ae_l
-            k22 = 12.0 * ei / L**3
-            k23 = 6.0 * ei / L**2
-            k33 = 4.0 * ei / L
-            k36 = 2.0 * ei / L
-            
-            K_L = np.zeros((6, 6))
-            K_L[0,0] = k11; K_L[0,3] = -k11; K_L[3,0] = -k11; K_L[3,3] = k11
-            K_L[1,1] = k22; K_L[1,2] = k23; K_L[1,4] = -k22; K_L[1,5] = k23
-            K_L[2,1] = k23; K_L[2,2] = k33; K_L[2,4] = -k23; K_L[2,5] = k36
-            K_L[4,1] = -k22; K_L[4,2] = -k23; K_L[4,4] = k22; K_L[4,5] = -k23
-            K_L[5,1] = k23; K_L[5,2] = k36; K_L[5,4] = -k23; K_L[5,5] = k33
-            
-            Tg = np.array([
-                [ c,  s, 0,  0,  0, 0],
-                [-s,  c, 0,  0,  0, 0],
-                [ 0,  0, 1,  0,  0, 0],
-                [ 0,  0, 0,  c,  s, 0],
-                [ 0,  0, 0, -s,  c, 0],
-                [ 0,  0, 0,  0,  0, 1]
-            ])
-            
-            u_global_elem = U_global[el["gdl"]]
-            u_local_elem = Tg @ u_global_elem
-            Fe_local = np.array([0.0, (el["w"] * L)/2.0, (el["w"] * L**2)/12.0, 0.0, (el["w"] * L)/2.0, -(el["w"] * L**2)/12.0])
-            f_local = K_L @ u_local_elem + Fe_local
-            
-            fuerzas_internas.append({
-                "Barra": b_id,
-                "Axial Ini (Tn)": round(f_local[0], 3),
-                "Cortante Ini (Tn)": round(f_local[1], 3),
-                "Momento Ini (Tn.m)": round(f_local[2], 3),
-                "Axial Fin (Tn)": round(f_local[3], 3),
-                "Cortante Fin (Tn)": round(f_local[4], 3),
-                "Momento Fin (Tn.m)": round(f_local[5], 3)
-            })
-
-        st.balloons()
-        st.success("¡Cálculo matricial procesado con éxito!")
-
-        # --- PESTAÑAS MODULARES ---
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-            "📐 Geometría y Elementos", 
-            "📋 Partición de GDL", 
-            "🧮 Matrices Locales (k)", 
-            "🌐 Matrices Globales (Ke)", 
-            "📊 Matriz Global Ensamblada", 
-            "📉 Desplazamientos y Reacciones", 
-            "⚖️ Equilibrio Estático", 
-            "🎨 GRÁFICOS"
-        ])
-        
-        with tab1:
-            st.subheader("📐 Resumen de Geometría y Propiedades")
-            st.write("**Nodos y Coordenadas:**")
-            st.dataframe(nodos_clean, hide_index=True, use_container_width=True)
-            st.write("**Elementos y Secciones:**")
-            st.dataframe(barras_clean, hide_index=True, use_container_width=True)
-            
-        with tab2:
-            st.subheader("📋 Partición de Grados de Libertad (GDL)")
-            gdl_df = pd.DataFrame({
-                "Nodo": nodos_clean["Nodo"].astype(int),
-                "GDL X": [3*i for i in range(n_nodos)],
-                "GDL Y": [3*i+1 for i in range(n_nodos)],
-                "GDL Giro": [3*i+2 for i in range(n_nodos)]
-            })
-            st.dataframe(gdl_df, hide_index=True, use_container_width=True)
-            st.info(f"📌 **GDL Libres:** {gdl_libres}")
-            st.info(f"📌 **GDL Restringidos:** {gdl_restringidos}")
-
-        with tab3:
-            st.subheader("🧮 Matrices de Rigidez Local (k) por Elemento")
-            for b_id, k_mat in matrices_locales.items():
-                st.write(f"**Barra {b_id} (Sistema Local 6x6):**")
-                st.dataframe(pd.DataFrame(np.round(k_mat, 2)), use_container_width=True)
-
-        with tab4:
-            st.subheader("🌐 Matrices de Rigidez Global (Ke) por Elemento")
-            for b_id, kg_mat in matrices_globales.items():
-                st.write(f"**Barra {b_id} (Sistema Global 6x6):**")
-                st.dataframe(pd.DataFrame(np.round(kg_mat, 2)), use_container_width=True)
-
-        with tab5:
-            st.subheader("📊 Matriz de Rigidez Global de la Estructura (Ensamblada)")
-            st.dataframe(pd.DataFrame(np.round(K_global, 2)), use_container_width=True)
-
-        with tab6:
-            st.subheader("📉 Desplazamientos Nodales y Reacciones en los Apoyos")
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.write("**Desplazamientos:**")
-                desp_df = pd.DataFrame({
+            with tab2:
+                st.subheader("📋 Partición de Grados de Libertad (GDL)")
+                gdl_df = pd.DataFrame({
                     "Nodo": nodos_clean["Nodo"].astype(int),
-                    "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)],
-                    "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)],
-                    "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]
+                    "GDL X": [3*i for i in range(n_nodos)],
+                    "GDL Y": [3*i+1 for i in range(n_nodos)],
+                    "GDL Giro": [3*i+2 for i in range(n_nodos)]
                 })
-                st.dataframe(desp_df, hide_index=True, use_container_width=True)
-            with col_b:
-                st.write("**Reacciones:**")
-                reac_df = pd.DataFrame({
-                    "Nodo": nodos_clean["Nodo"].astype(int),
-                    "Rx (Tn)": np.round(R_global[0::3], 3),
-                    "Ry (Tn)": np.round(R_global[1::3], 3),
-                    "Mz (Tn.m)": np.round(R_global[2::3], 3)
-                })
-                reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
-                st.dataframe(reac_df, hide_index=True, use_container_width=True)
+                st.dataframe(gdl_df, hide_index=True, use_container_width=True)
+                st.info(f"📌 **GDL Libres:** {gdl_libres}")
+                st.info(f"📌 **GDL Restringidos:** {gdl_restringidos}")
 
-        with tab7:
-            st.subheader("⚖️️ Equilibrio Estático y Fuerzas Internas (Axial, Cortante y Momento)")
-            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
+            with tab3:
+                st.subheader("🧮 Matrices de Rigidez Local (k) por Elemento")
+                for b_id, k_mat in matrices_locales.items():
+                    st.write(f"**Barra {b_id} (Sistema Local 6x6):**")
+                    st.dataframe(pd.DataFrame(np.round(k_mat, 2)), use_container_width=True)
 
-        with tab8:
-            st.subheader("🎨 Galería de Diagramas y Resultados Oficiales")
-            st.markdown("Visualización automática de los gráficos estructurales del análisis:")
-            
-            col1, col2 = st.columns(2)
-            
-            def mostrar_imagen(nombre_base, titulo):
-                path = None
-                for ext in [".jpg", ".png", ".jpeg"]:
-                    if os.path.exists(nombre_base + ext):
-                        path = nombre_base + ext
-                        break
-                st.markdown(f"**{titulo}**")
-                if path:
-                    st.image(path, use_container_width=True)
-                else:
-                    st.warning(f"⚠️ Falta subir el archivo `{nombre_base}.jpg` al repositorio de GitHub.")
+            with tab4:
+                st.subheader("🌐 Matrices de Rigidez Global (Ke) por Elemento")
+                for b_id, kg_mat in matrices_globales.items():
+                    st.write(f"**Barra {b_id} (Sistema Global 6x6):**")
+                    st.dataframe(pd.DataFrame(np.round(kg_mat, 2)), use_container_width=True)
 
-            with col1:
-                mostrar_imagen("modelo", "1. Modelo Geométrico y Cargas")
-                mostrar_imagen("cortante", "3. Diagrama de Esfuerzo Cortante (V)")
-                mostrar_imagen("deformacion", "5. Diagrama de Deformación")
+            with tab5:
+                st.subheader("📊 Matriz de Rigidez Global de la Estructura (Ensamblada)")
+                st.dataframe(pd.DataFrame(np.round(K_global, 2)), use_container_width=True)
+
+            with tab6:
+                st.subheader("📉 Desplazamientos Nodales y Reacciones en los Apoyos")
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.write("**Desplazamientos:**")
+                    desp_df = pd.DataFrame({
+                        "Nodo": nodos_clean["Nodo"].astype(int),
+                        "Dx (m)": [f"{U_global[3*i]:.6f}" for i in range(n_nodos)],
+                        "Dy (m)": [f"{U_global[3*i+1]:.6f}" for i in range(n_nodos)],
+                        "Giro (rad)": [f"{U_global[3*i+2]:.6f}" for i in range(n_nodos)]
+                    })
+                    st.dataframe(desp_df, hide_index=True, use_container_width=True)
+                with col_b:
+                    st.write("**Reacciones:**")
+                    reac_df = pd.DataFrame({
+                        "Nodo": nodos_clean["Nodo"].astype(int),
+                        "Rx (Tn)": np.round(R_global[0::3], 3),
+                        "Ry (Tn)": np.round(R_global[1::3], 3),
+                        "Mz (Tn.m)": np.round(R_global[2::3], 3)
+                    })
+                    reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
+                    st.dataframe(reac_df, hide_index=True, use_container_width=True)
+
+            with tab7:
+                st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas (Axial, Cortante y Momento)")
+                st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
+
+            with tab8:
+                st.subheader("🎨 Galería de Diagramas y Resultados Oficiales")
+                st.markdown("Visualización automática de los gráficos estructurales del análisis:")
                 
-            with col2:
-                mostrar_imagen("axial", "2. Diagrama de Fuerza Axial (N)")
-                mostrar_imagen("momento", "4. Diagrama de Momento Flector (M)")
-                mostrar_imagen("cuerpo_libre", "6. Diagrama de Cuerpo Libre (Reacciones)")
+                col1, col2 = st.columns(2)
+                
+                def mostrar_imagen(nombre_base, titulo):
+                    path = None
+                    for ext in [".jpg", ".png", ".jpeg"]:
+                        if os.path.exists(nombre_base + ext):
+                            path = nombre_base + ext
+                            break
+                    st.markdown(f"**{titulo}**")
+                    if path:
+                        st.image(path, use_container_width=True)
+                    else:
+                        st.warning(f"⚠️ Falta subir el archivo `{nombre_base}.jpg` al repositorio de GitHub.")
 
-    except Exception as e:
-        st.error(f"❌ Error en el cálculo estructural: {e}")
+                with col1:
+                    mostrar_imagen("modelo", "1. Modelo Geométrico y Cargas")
+                    mostrar_imagen("cortante", "3. Diagrama de Esfuerzo Cortante (V)")
+                    mostrar_imagen("deformacion", "5. Diagrama de Deformación")
+                    
+                with col2:
+                    mostrar_imagen("axial", "2. Diagrama de Fuerza Axial (N)")
+                    mostrar_imagen("momento", "4. Diagrama de Momento Flector (M)")
+                    mostrar_imagen("cuerpo_libre", "6. Diagrama de Cuerpo Libre (Reacciones)")
+
+        except Exception as e:
+            st.error(f"❌ Error en el cálculo estructural: {e}")
+
+# ==========================================
+# VISTAS DE LOS EJERCICIOS 02, 03 Y 04 (Plantilla lista)
+# ==========================================
+elif st.session_state.pagina in ['ej_2', 'ej_3', 'ej_4']:
+    if st.button("⬅️ Volver al Menú Principal"):
+        ir_a('home')
+        st.rerun()
+        
+    st.markdown(f"<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO {st.session_state.pagina[-1].upper()}</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
+    """)
+    st.info("🚧 Este ejercicio está configurado en la estructura del menú. Solo indícame sus datos nodales y cargas cuando estés listo para programarlo al 100%.")
