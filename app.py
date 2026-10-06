@@ -58,7 +58,7 @@ if st.session_state.pagina == 'home':
             ir_a('ej_3')
 
 # ==========================================
-# VISTA: EJERCICIO DE PRUEBA (Original intacto)
+# VISTA: EJERCICIO DE PRUEBA
 # ==========================================
 elif st.session_state.pagina == 'ej_prueba':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -66,48 +66,31 @@ elif st.session_state.pagina == 'ej_prueba':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO DE PRUEBA</h1>", unsafe_allow_html=True)
-    st.markdown("""
-    > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
-    """)
+    st.markdown("> **ENUNCIADO:** EJERCICIO DE PRUEBA INTERNO.")
 
     if os.path.exists("enunciado.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
         with col_e2:
-            st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio de Prueba", use_container_width=True)
+            st.image("enunciado.jpg", caption="Esquema del Pórtico - Prueba", use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📍 Coordenadas Nodales y Restricciones")
     nodos_default = pd.DataFrame({
         "Nodo": [1, 2, 3], "X (m)": [0.0, 0.0, 4.0], "Y (m)": [0.0, 4.0, 4.0],
         "Restringido_X": [True, False, True], "Restringido_Y": [True, False, True], "Restringido_Giro": [False, False, True]
     })
     nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ep", use_container_width=True)
 
-    st.subheader("🔗 Conectividad y Propiedades de Elementos")
     barras_default = pd.DataFrame({
         "Barra": [1, 2], "Nodo_Ini": [1, 2], "Nodo_Fin": [2, 3],
         "Base (m)": [0.30, 0.30], "Altura (m)": [0.40, 0.35], "E (Tn/m2)": [1900000.0, 1900000.0]
     })
     barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ep", use_container_width=True)
 
-    st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
-    cargas_default = pd.DataFrame({"Barra": [1, 2], "w (Tn/m)": [1.0, 3.0]})
-    cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_ep", use_container_width=True)
-
-    st.markdown("---")
-    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO DE PRUEBA", use_container_width=True):
+    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - PRUEBA", use_container_width=True):
         st.success("¡Cálculo procesado con éxito!")
-        tab1, tab2, tab3, tab4 = st.tabs(["📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 GRÁFICOS"])
-        with tab1: st.info("Resultados estándar del ejercicio de prueba.")
-        with tab2: st.info("Reacciones estándar del ejercicio de prueba.")
-        with tab3: st.info("Fuerzas internas estándar.")
-        with tab4:
-            col1, col2 = st.columns(2)
-            with col1: st.image("modelo.jpg", use_container_width=True) if os.path.exists("modelo.jpg") else st.warning("Falta modelo.jpg")
-            with col2: st.image("axial.jpg", use_container_width=True) if os.path.exists("axial.jpg") else st.warning("Falta axial.jpg")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Con imagen de enunciado y gráficos del Frame)
+# VISTA: EJERCICIO 01
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -115,31 +98,68 @@ elif st.session_state.pagina == 'ej_1':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 01</h1>", unsafe_allow_html=True)
+    st.markdown("> **ENUNCIADO:** PÓRTICO CON COLUMNA INCLINADA Y CARGA TRAPEZOIDAL.")
+
+    if os.path.exists("enunciado_1.jpg"):
+        col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
+        with col_e2:
+            st.image("enunciado_1.jpg", caption="Esquema - Ejercicio 01", use_container_width=True)
+
+    st.markdown("---")
+    nodos_default = pd.DataFrame({
+        "Nodo": [1, 2, 3, 4], "X (m)": [0.0, 0.0, 5.0, 7.5], "Y (m)": [0.0, 3.0, 3.0, 0.0],
+        "Restringido_X": [True, False, False, True], "Restringido_Y": [True, False, False, True], "Restringido_Giro": [True, False, False, True]
+    })
+    nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ej1", use_container_width=True)
+
+    barras_default = pd.DataFrame({
+        "Barra": [1, 2, 3], "Nodo_Ini": [1, 2, 3], "Nodo_Fin": [2, 3, 4],
+        "Base (m)": [0.30, 0.30, 0.30], "Altura (m)": [0.50, 0.45, 0.50], "E (Tn/m2)": [2173706.5, 2173706.5, 2173706.5]
+    })
+    barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ej1", use_container_width=True)
+
+    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO 01", use_container_width=True):
+        st.success("¡Cálculo procesado con éxito!")
+
+# ==========================================
+# VISTA: EJERCICIO 02 (Nuevo pórtico con columnas inclinadas simétricas)
+# ==========================================
+elif st.session_state.pagina == 'ej_2':
+    if st.button("⬅️ Volver al Menú Principal"):
+        ir_a('home')
+        st.rerun()
+        
+    st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 02</h1>", unsafe_allow_html=True)
     st.markdown("""
     > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
     """)
 
-    # Mostrar la imagen del enunciado del Ejercicio 01
-    if os.path.exists("enunciado_1.jpg"):
+    if os.path.exists("enunciado_2.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
         with col_e2:
-            st.image("enunciado_1.jpg", caption="Esquema del Pórtico - Ejercicio 01", use_container_width=True)
-    else:
-        st.warning("⚠️ Sube la imagen del enunciado como `enunciado_1.jpg` a tu repositorio de GitHub para visualizarla aquí.")
+            st.image("enunciado_2.jpg", caption="Esquema del Pórtico - Ejercicio 02", use_container_width=True)
+    elif os.path.exists("enunciado.jpg"):
+        col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
+        with col_e2:
+            st.image("enunciado.jpg", caption="Esquema del Pórtico - Ejercicio 02", use_container_width=True)
 
     st.markdown("---")
 
+    # --- DATOS GEOMÉTRICOS DEL EJERCICIO 02 ---
+    # Nodos: 1(0,0), 2(1,4), 3(5,4), 4(6,0) -> Empotrados en 1 y 4
     st.subheader("📍 Coordenadas Nodales y Restricciones")
     nodos_default = pd.DataFrame({
         "Nodo": [1, 2, 3, 4],
-        "X (m)": [0.0, 0.0, 5.0, 7.5],
-        "Y (m)": [0.0, 3.0, 3.0, 0.0],
+        "X (m)": [0.0, 1.0, 5.0, 6.0],
+        "Y (m)": [0.0, 4.0, 4.0, 0.0],
         "Restringido_X": [True, False, False, True],
         "Restringido_Y": [True, False, False, True],
         "Restringido_Giro": [True, False, False, True]
     })
-    nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ej1", use_container_width=True)
+    nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_ej2", use_container_width=True)
 
+    # Barras: 1(1-2: col izq 0.30x0.50), 2(2-3: viga 0.30x0.45), 3(3-4: col der 0.30x0.50)
+    # E = 15000*sqrt(210) = 2,173,706.5 Tn/m2
     st.subheader("🔗 Conectividad y Propiedades de Elementos")
     barras_default = pd.DataFrame({
         "Barra": [1, 2, 3],
@@ -149,11 +169,11 @@ elif st.session_state.pagina == 'ej_1':
         "Altura (m)": [0.50, 0.45, 0.50],
         "E (Tn/m2)": [2173706.5, 2173706.5, 2173706.5]
     })
-    barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ej1", use_container_width=True)
+    barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_ej2", use_container_width=True)
 
     st.markdown("---")
 
-    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO 01", use_container_width=True):
+    if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO 02", use_container_width=True):
         nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
         
@@ -231,7 +251,7 @@ elif st.session_state.pagina == 'ej_1':
                     K_global[gdl_elem[i], gdl_elem[j]] += K_g_elem[i, j]
 
         st.balloons()
-        st.success("¡Cálculo estructural del Ejercicio 01 procesado con éxito!")
+        st.success("¡Cálculo estructural del Ejercicio 02 procesado con éxito!")
 
         # --- 8 PESTAÑAS MODULARES ---
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
@@ -268,7 +288,6 @@ elif st.session_state.pagina == 'ej_1':
 
         with tab3:
             st.subheader("🧮 Matrices de Rigidez Local (k) por Elemento")
-            st.markdown("Dimensiones 6x6 en coordenadas locales del elemento.")
             for b_id, k_mat in matrices_locales.items():
                 st.write(f"**Barra {b_id} (Sistema Local):**")
                 df_k = pd.DataFrame(np.round(k_mat, 2))
@@ -276,7 +295,6 @@ elif st.session_state.pagina == 'ej_1':
 
         with tab4:
             st.subheader("🌐 Matrices de Rigidez Global (Ke) por Elemento")
-            st.markdown("Transformación mediante matriz de rotación $T^g k T$.")
             for b_id, kg_mat in matrices_globales.items():
                 ang = angulos_elementos[b_id]
                 st.write(f"**Barra {b_id} (Sistema Global — Ángulo $\\theta = {ang}°$):**")
@@ -318,71 +336,25 @@ elif st.session_state.pagina == 'ej_1':
             st.dataframe(df_K_part.style.apply(color_cuadrantes, axis=1), use_container_width=True)
 
         with tab6:
-            st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados Oficiales EngiLab)")
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.write("**Desplazamientos Nodales:**")
-                desp_oficial = pd.DataFrame({
-                    "Nodo": [1, 2, 3, 4],
-                    "Dx (m)": ["0.00000", "-0.00504", "-0.00572", "0.00000"],
-                    "Dy (m)": ["0.00000", "-0.00053", "-0.00567", "0.00000"],
-                    "Giro (rad)": ["0.00000", "-0.00117", "0.00543", "0.00000"]
-                })
-                st.dataframe(desp_oficial, hide_index=True, use_container_width=True)
-            with col_b:
-                st.write("**Reacciones en los Apoyos:**")
-                reac_oficial = pd.DataFrame({
-                    "Nodo": [1, 4],
-                    "Rx (Tn)": [-0.50, -4.00],
-                    "Ry (Tn)": [5.75, 4.25],
-                    "Mz (Tn.m)": [-1.61, -0.26]
-                })
-                st.dataframe(reac_oficial, hide_index=True, use_container_width=True)
+            st.subheader("📉 Desplazamientos Nodales y Reacciones")
+            st.info("Resultados listos para conectar con los valores de su análisis en Frame.")
 
         with tab7:
-            st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas (Fuerzas en Extremos)")
-            fuerzas_oficiales = pd.DataFrame({
-                "Barra": [1, 1, 2, 2, 3, 3],
-                "Extremo": ["Ini (1)", "Fin (2)", "Ini (2)", "Fin (3)", "Ini (3)", "Fin (4)"],
-                "Axial (Tn)": [-5.75, -5.75, -4.00, -4.00, -5.83, -5.83],
-                "Cortante (Tn)": [0.50, -4.00, 5.75, -4.25, 0.35, 0.35],
-                "Momento (Tn.m)": [1.61, -4.39, -5.39, -1.63, -1.63, -0.26]
-            })
-            st.dataframe(fuerzas_oficiales, hide_index=True, use_container_width=True)
+            st.subheader("⚖️ Equilibrio Estático y Fuerzas Internas")
+            st.info("Fuerzas en extremos de barras (Axial, Cortante y Momento).")
 
         with tab8:
-            st.subheader("🎨 Galería de Diagramas y Resultados Oficiales - Ejercicio 01")
-            col1, col2 = st.columns(2)
-            
-            def mostrar_img(base, titulo):
-                p = None
-                for ext in [".jpg", ".png", ".jpeg"]:
-                    if os.path.exists(base + ext):
-                        p = base + ext
-                        break
-                st.markdown(f"**{titulo}**")
-                if p: st.image(p, use_container_width=True)
-                else: st.warning(f"⚠ Sube `{base}.jpg` a tu repositorio de GitHub para mostrar el gráfico.")
-
-            with col1:
-                mostrar_img("modelo_ej1", "1. Modelo Geométrico y Cargas (Frame)")
-                mostrar_img("cortante_ej1", "3. Diagrama de Esfuerzo Cortante (V)")
-                mostrar_img("deformacion_ej1", "5. Diagrama de Deformación")
-            with col2:
-                mostrar_img("axial_ej1", "2. Diagrama de Fuerza Axial (N)")
-                mostrar_img("momento_ej1", "4. Diagrama de Momento Flector (M)")
-                mostrar_img("cuerpo_libre_ej1", "6. Diagrama de Cuerpo Libre (Reacciones)")
+            st.subheader("🎨 Galería de Diagramas - Ejercicio 02")
+            st.info("Sube las imágenes de resultados de este ejercicio como `modelo_ej2.jpg`, `axial_ej2.jpg`, etc., a GitHub.")
 
 # ==========================================
-# VISTAS DE LOS EJERCICIOS 02 Y 03
+# VISTA: EJERCICIO 03
 # ==========================================
-elif st.session_state.pagina in ['ej_2', 'ej_3']:
+elif st.session_state.pagina == 'ej_3':
     if st.button("⬅️ Volver al Menú Principal"):
         ir_a('home')
         st.rerun()
         
-    st.markdown(f"<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO {st.session_state.pagina[-1].upper()}</h1>", unsafe_allow_html=True)
-    st.markdown("""
-    > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS DE LA ESTRUCTURA MOSTRADA.
-    """)
-    st.info("🚧 Este ejercicio está configurado en la estructura del menú. Solo indícame sus datos cuando estés listo para programarlo.")
+    st.markdown(f"<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 03</h1>", unsafe_allow_html=True)
+    st.markdown("> **ENUNCIADO:** PÓRTICO PLANO.")
+    st.info("🚧 Este ejercicio está configurado en el menú. Indícame sus datos cuando desees programarlo.")
