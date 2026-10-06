@@ -62,7 +62,7 @@ if st.session_state.pagina == 'home':
 # VISTA: EJERCICIO 01 (Valores Oficiales EngiLab)
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
-    if st.button("⬅️ Volver al Menú Principal"):
+    if st.button("⬅️️ Volver al Menú Principal"):
         ir_a('home')
         st.rerun()
         
@@ -479,7 +479,7 @@ elif st.session_state.pagina == 'ej_2':
                 mostrar_img2("cuerpo_libre_ej2", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
 # ==========================================
-# VISTA: EJERCICIO 03 (Cálculo Automático Completo)
+# VISTA: EJERCICIO 03 (Apoyo Fijo y Apoyo Móvil)
 # ==========================================
 elif st.session_state.pagina == 'ej_3':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -487,7 +487,7 @@ elif st.session_state.pagina == 'ej_3':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 03</h1>", unsafe_allow_html=True)
-    st.markdown("> **ENUNCIADO:** PÓRTICO CON CLARO DE 8.0 m, ALTURA DE 5.0 m, COLUMNA ARTICULADA CON CARGA LATERAL Y VIGA CON CARGA TRIANGULAR[cite: 26].")
+    st.markdown("> **ENUNCIADO:** PÓRTICO CON CLARO DE 8.0 m, ALTURA DE 5.0 m, APOYO FIJO EN 'a' Y APOYO MÓVIL EN 'b'[cite: 23, 26].")
 
     if os.path.exists("enunciado_3.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
@@ -504,8 +504,8 @@ elif st.session_state.pagina == 'ej_3':
         "Nodo": [1, 2, 3, 4],
         "X (m)": [0.0, 0.0, 8.0, 8.0],
         "Y (m)": [0.0, 5.0, 5.0, 0.0],
-        "Restringido_X": [True, False, False, True],
-        "Restringido_Y": [True, False, False, True],
+        "Restringido_X": [True, False, False, False], # Nodo 1: Apoyo fijo (restringe X), Nodo 4: Apoyo móvil (libre en X)
+        "Restringido_Y": [True, False, False, True],  # Ambos restringen Y
         "Restringido_Giro": [False, False, False, False]
     })
     nodos_df_3 = st.data_editor(nodos_default_3, num_rows="dynamic", key="nodos_ej3", use_container_width=True)
@@ -588,7 +588,6 @@ elif st.session_state.pagina == 'ej_3':
             
             Fe_local = np.zeros(6)
             if b_id == 1:
-                # Columna izq: Carga lateral uniforme wx = 4.0 Tn/m[cite: 26]
                 wx = 4.0
                 f_horiz_total = wx * L
                 Fe_local[0] = (f_horiz_total / 2.0) * c
@@ -596,7 +595,6 @@ elif st.session_state.pagina == 'ej_3':
                 Fe_local[3] = (f_horiz_total / 2.0) * c
                 Fe_local[4] = -(f_horiz_total / 2.0) * s
             elif b_id == 2:
-                # Viga central: Carga triangular de 0 a 4.0 Tn/m[cite: 26]
                 wy_max = 4.0
                 Fe_local[1] = (7.0 * wy_max * L) / 20.0
                 Fe_local[2] = (3.0 * wy_max * L**2) / 20.0
