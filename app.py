@@ -274,7 +274,7 @@ elif st.session_state.pagina == 'ej_1':
                 mostrar_img("cuerpo_libre_ej1", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
 # ==========================================
-# VISTA: EJERCICIO 02 (Actualizado a 6 nudos y 5 barras)
+# VISTA: EJERCICIO 02 (Actualizado a 6 Nudos y 5 Barras)
 # ==========================================
 elif st.session_state.pagina == 'ej_2':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -282,7 +282,7 @@ elif st.session_state.pagina == 'ej_2':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 02</h1>", unsafe_allow_html=True)
-    st.markdown("> **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS.")
+    st.markdown("> **ENUNCIADO:** PÓRTICO CON 6 NUDOS, COLUMNAS INCLINADAS Y VOLADIZOS.")
 
     if os.path.exists("enunciado_2.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
@@ -297,7 +297,7 @@ elif st.session_state.pagina == 'ej_2':
     st.subheader("📍 Coordenadas Nodales y Restricciones (6 Nudos)")
     nodos_default = pd.DataFrame({
         "Nodo": [1, 2, 3, 4, 5, 6],
-        "X (m)": [1.0, 0.0, 1.0, 5.0, 6.0, 5.0],
+        "X (m)": [0.0, 0.0, 1.0, 5.0, 6.0, 6.0],
         "Y (m)": [0.0, 4.0, 4.0, 4.0, 4.0, 0.0],
         "Restringido_X": [True, False, False, False, False, True],
         "Restringido_Y": [True, False, False, False, False, True],
@@ -383,7 +383,6 @@ elif st.session_state.pagina == 'ej_2':
             
             Fe_local = np.zeros(6)
             if b_id == 1:
-                # Carga horizontal w = 2 Tn/m en la columna izq
                 wx = 2.0
                 f_horiz_total = wx * 4.0
                 Fe_local[0] = (f_horiz_total / 2.0) * c
@@ -391,7 +390,6 @@ elif st.session_state.pagina == 'ej_2':
                 Fe_local[3] = (f_horiz_total / 2.0) * c
                 Fe_local[4] = -(f_horiz_total / 2.0) * s
             elif b_id in [2, 3, 4]:
-                # Carga vertical w = 2 Tn/m en los elementos de la viga superior (voladizo izq, viga central, voladizo der)
                 wy = 2.0
                 Fe_local[1] = (wy * L) / 2.0
                 Fe_local[2] = (wy * L**2) / 12.0
