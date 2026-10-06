@@ -70,7 +70,7 @@ elif st.session_state.pagina == 'ej_prueba':
     st.info("Configurado para pruebas internas.")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Con Session State Persistente)
+# VISTA: EJERCICIO 01
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -78,9 +78,7 @@ elif st.session_state.pagina == 'ej_1':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 01</h1>", unsafe_allow_html=True)
-    st.markdown("""
-    > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS.
-    """)
+    st.markdown("> **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS.")
 
     if os.path.exists("enunciado_1.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
@@ -129,6 +127,7 @@ elif st.session_state.pagina == 'ej_1':
         matrices_locales = {}
         matrices_globales = {}
         angulos_elementos = {}
+        elementos_info = []
         
         for _, barra in barras_clean.iterrows():
             b_id = int(barra["Barra"])
@@ -173,6 +172,7 @@ elif st.session_state.pagina == 'ej_1':
             Fe_global = Tg.T @ Fe_local
             for i in range(6):
                 F_equivalente_global[gdl_elem[i]] += Fe_global[i]
+            elementos_info.append({"Barra": b_id, "gdl": gdl_elem})
 
         K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
         F_LL = -F_equivalente_global[gdl_libres]
@@ -180,6 +180,30 @@ elif st.session_state.pagina == 'ej_1':
         U_global = np.zeros(n_gdl)
         U_global[gdl_libres] = U_libres
         R_global = K_global @ U_global + F_equivalente_global
+
+        fuerzas_internas = []
+        for el in elementos_info:
+            b_id = el["Barra"]
+            n1 = nodos_clean[nodos_clean["Nodo"] == barras_clean[barras_clean["Barra"] == b_id]["Nodo_Ini"].values[0]].iloc[0]
+            n2 = nodos_clean[nodos_clean["Nodo"] == barras_clean[barras_clean["Barra"] == b_id]["Nodo_Fin"].values[0]].iloc[0]
+            dx, dy = n2["X (m)"] - n1["X (m)"], n2["Y (m)"] - n1["Y (m)"]
+            L = np.sqrt(dx**2 + dy**2)
+            c, s = dx/L, dy/L
+            K_L = matrices_locales[b_id]
+            Tg = np.array([[c, s, 0, 0, 0, 0], [-s, c, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, c, s, 0], [0, 0, 0, -s, c, 0], [0, 0, 0, 0, 0, 1]])
+            u_local_elem = Tg @ U_global[el["gdl"]]
+            Fe_local = np.zeros(6)
+            if b_id == 1:
+                Fe_local = np.array([0.0, 2.25, 1.125, 0.0, 2.25, -1.125])
+            elif b_id == 2:
+                wy = 2.0
+                Fe_local = np.array([0.0, (wy*L)/2.0, (wy*L**2)/12.0, 0.0, (wy*L)/2.0, -(wy*L**2)/12.0])
+            f_local = K_L @ u_local_elem + Fe_local
+            fuerzas_internas.append({
+                "Barra": b_id,
+                "Axial Ini (Tn)": round(f_local[0], 3), "Cortante Ini (Tn)": round(f_local[1], 3), "Momento Ini (Tn.m)": round(f_local[2], 3),
+                "Axial Fin (Tn)": round(f_local[3], 3), "Cortante Fin (Tn)": round(f_local[4], 3), "Momento Fin (Tn.m)": round(f_local[5], 3)
+            })
 
         st.success("¡Cálculo estructural automático del Ejercicio 01 procesado con éxito!")
 
@@ -220,15 +244,31 @@ elif st.session_state.pagina == 'ej_1':
                 reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
                 st.dataframe(reac_df, hide_index=True, use_container_width=True)
         with tab7:
-            st.info("Fuerzas internas calculadas y en equilibrio.")
+            st.subheader("⚖️ Fuerzas Internas en los Extremos de los Elementos")
+            st.dataframe(pd.DataFrame(fuerzas_internas), hide_index=True, use_container_width=True)
         with tab8:
-            if os.path.exists("modelo_ej1.jpg"):
-                st.image("modelo_ej1.jpg", use_container_width=True)
-            else:
-                st.info("Sube `modelo_ej1.jpg` a tu repositorio de GitHub para ver el gráfico.")
+            st.subheader("🎨 Galería de Diagramas - Ejercicio 01")
+            g_col1, g_col2 = st.columns(2)
+            def mostrar_img(base, titulo):
+                p = None
+                for ext in [".jpg", ".png", ".jpeg"]:
+                    if os.path.exists(base + ext):
+                        p = base + ext
+                        break
+                st.markdown(f"**{titulo}**")
+                if p: st.image(p, use_container_width=True)
+                else: st.info(f"Sube `{base}.jpg` o `.png` a GitHub.")
+            with g_col1:
+                mostrar_img("modelo_ej1", "1. Modelo Geométrico y Cargas")
+                mostrar_img("cortante_ej1", "3. Diagrama de Esfuerzo Cortante (V)")
+                mostrar_img("deformacion_ej1", "5. Diagrama de Deformación")
+            with g_col2:
+                mostrar_img("axial_ej1", "2. Diagrama de Fuerza Axial (N)")
+                mostrar_img("momento_ej1", "4. Diagrama de Momento Flector (M)")
+                mostrar_img("cuerpo_libre_ej1", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
 # ==========================================
-# VISTA: EJERCICIO 02 (Con Session State Persistente)
+# VISTA: EJERCICIO 02
 # ==========================================
 elif st.session_state.pagina == 'ej_2':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -236,9 +276,7 @@ elif st.session_state.pagina == 'ej_2':
         st.rerun()
         
     st.markdown("<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 02</h1>", unsafe_allow_html=True)
-    st.markdown("""
-    > **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS.
-    """)
+    st.markdown("> **ENUNCIADO:** HALLAR LAS REACCIONES, FUERZAS AXIALES, ESFUERZOS DE CORTE, MOMENTOS FLECTORES Y DESPLAZAMIENTOS.")
 
     if os.path.exists("enunciado_2.jpg"):
         col_e1, col_e2, col_e3 = st.columns([1, 2, 1])
@@ -291,6 +329,7 @@ elif st.session_state.pagina == 'ej_2':
         matrices_locales = {}
         matrices_globales = {}
         angulos_elementos = {}
+        elementos_info = []
         
         for _, barra in barras_clean.iterrows():
             b_id = int(barra["Barra"])
@@ -343,6 +382,7 @@ elif st.session_state.pagina == 'ej_2':
             Fe_global = Tg.T @ Fe_local
             for i in range(6):
                 F_equivalente_global[gdl_elem[i]] += Fe_global[i]
+            elementos_info.append({"Barra": b_id, "gdl": gdl_elem})
 
         K_LL = K_global[np.ix_(gdl_libres, gdl_libres)]
         F_LL = -F_equivalente_global[gdl_libres]
@@ -350,6 +390,38 @@ elif st.session_state.pagina == 'ej_2':
         U_global = np.zeros(n_gdl)
         U_global[gdl_libres] = U_libres
         R_global = K_global @ U_global + F_equivalente_global
+
+        fuerzas_internas_2 = []
+        for el in elementos_info:
+            b_id = el["Barra"]
+            n1 = nodos_clean[nodos_clean["Nodo"] == barras_clean[barras_clean["Barra"] == b_id]["Nodo_Ini"].values[0]].iloc[0]
+            n2 = nodos_clean[nodos_clean["Nodo"] == barras_clean[barras_clean["Barra"] == b_id]["Nodo_Fin"].values[0]].iloc[0]
+            dx, dy = n2["X (m)"] - n1["X (m)"], n2["Y (m)"] - n1["Y (m)"]
+            L = np.sqrt(dx**2 + dy**2)
+            c, s = dx/L, dy/L
+            K_L = matrices_locales[b_id]
+            Tg = np.array([[c, s, 0, 0, 0, 0], [-s, c, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, c, s, 0], [0, 0, 0, -s, c, 0], [0, 0, 0, 0, 0, 1]])
+            u_local_elem = Tg @ U_global[el["gdl"]]
+            Fe_local = np.zeros(6)
+            if b_id == 1:
+                wx = 2.0
+                f_horiz_total = wx * 4.0
+                Fe_local[0] = (f_horiz_total / 2.0) * c
+                Fe_local[1] = -(f_horiz_total / 2.0) * s
+                Fe_local[3] = (f_horiz_total / 2.0) * c
+                Fe_local[4] = -(f_horiz_total / 2.0) * s
+            elif b_id == 2:
+                wy = 2.0
+                Fe_local[1] = (wy * L) / 2.0
+                Fe_local[2] = (wy * L**2) / 12.0
+                Fe_local[4] = (wy * L) / 2.0
+                Fe_local[5] = -(wy * L**2) / 12.0
+            f_local = K_L @ u_local_elem + Fe_local
+            fuerzas_internas_2.append({
+                "Barra": b_id,
+                "Axial Ini (Tn)": round(f_local[0], 3), "Cortante Ini (Tn)": round(f_local[1], 3), "Momento Ini (Tn.m)": round(f_local[2], 3),
+                "Axial Fin (Tn)": round(f_local[3], 3), "Cortante Fin (Tn)": round(f_local[4], 3), "Momento Fin (Tn.m)": round(f_local[5], 3)
+            })
 
         st.balloons()
         st.success("¡Cálculo estructural automático del Ejercicio 02 procesado con éxito!")
@@ -391,18 +463,34 @@ elif st.session_state.pagina == 'ej_2':
                 reac_df = reac_df[nodos_clean["Restringido_X"].values | nodos_clean["Restringido_Y"].values | nodos_clean["Restringido_Giro"].values]
                 st.dataframe(reac_df, hide_index=True, use_container_width=True)
         with tab7:
-            st.info("Fuerzas internas calculadas y en equilibrio.")
+            st.subheader("⚖️ Fuerzas Internas en los Extremos de los Elementos")
+            st.dataframe(pd.DataFrame(fuerzas_internas_2), hide_index=True, use_container_width=True)
         with tab8:
-            if os.path.exists("modelo_ej2.jpg"):
-                st.image("modelo_ej2.jpg", use_container_width=True)
-            else:
-                st.info("Sube `modelo_ej2.jpg` a tu repositorio de GitHub para ver el gráfico.")
+            st.subheader("🎨 Galería de Diagramas - Ejercicio 02")
+            g_col1, g_col2 = st.columns(2)
+            def mostrar_img2(base, titulo):
+                p = None
+                for ext in [".jpg", ".png", ".jpeg"]:
+                    if os.path.exists(base + ext):
+                        p = base + ext
+                        break
+                st.markdown(f"**{titulo}**")
+                if p: st.image(p, use_container_width=True)
+                else: st.info(f"Sube `{base}.jpg` o `.png` a GitHub.")
+            with g_col1:
+                mostrar_img2("modelo_ej2", "1. Modelo Geométrico y Cargas")
+                mostrar_img2("cortante_ej2", "3. Diagrama de Esfuerzo Cortante (V)")
+                mostrar_img2("deformacion_ej2", "5. Diagrama de Deformación")
+            with g_col2:
+                mostrar_img2("axial_ej2", "2. Diagrama de Fuerza Axial (N)")
+                mostrar_img2("momento_ej2", "4. Diagrama de Momento Flector (M)")
+                mostrar_img2("cuerpo_libre_ej2", "6. Diagrama de Cuerpo Libre (Reacciones)")
 
 # ==========================================
 # VISTA: EJERCICIO 03
 # ==========================================
 elif st.session_state.pagina == 'ej_3':
-    if st.button("⬅️ Volver al Menú Principal"):
+    if st.button("⬅️️ Volver al Menú Principal"):
         ir_a('home')
         st.rerun()
     st.markdown(f"<h1 style='text-align: center; color: #f7fafc;'>🏛 EJERCICIO 03</h1>", unsafe_allow_html=True)
