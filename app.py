@@ -7,7 +7,8 @@ st.set_page_config(page_title="SYNCRET - Pórticos Planos", page_icon="🏛️",
 
 st.markdown("""
 <style>
-    .block-container { padding-top: 2rem !important; padding-bottom: 3rem !important; }
+    /* Margen superior corregido para que el badge del autor no se corte */
+    .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; }
     .stApp { 
         background: linear-gradient(rgba(9, 13, 22, 0.94), rgba(20, 27, 45, 0.96)), 
                     url('https://images.unsplash.com/photo-1541888946425-d0fbb18f248e?q=80&w=1920&auto=format&fit=crop');
@@ -85,9 +86,9 @@ def ir_a(menu):
 # ==========================================
 if st.session_state.pagina == 'home':
     st.markdown("""
-        <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-            <div style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding: 8px 24px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                <span style="color: #f8fafc; font-weight: 600; font-size: 14px;">👤 Autor: Jara Aguila Nilo (0202313022) • UNS</span>
+        <div style="display: flex; justify-content: center; margin-top: 10px; margin-bottom: 20px;">
+            <div style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding: 10px 28px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                <span style="color: #f8fafc; font-weight: 600; font-size: 15px;">👤 Autor: Jara Aguila Nilo (0202313022) • UNS</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -246,7 +247,7 @@ elif st.session_state.pagina == 'ej_1':
         st.success("¡Cálculo estructural del Ejercicio 01 procesado con éxito!")
 
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-            "📐 Geometría", "📋 GDL", "🧮 Locales", "🌐 Globales", "📊 Matriz Particionada", "📉 Desplazamientos y Reacciones", "⚖️ Equilibrio", "🎨 GRÁFICOS"
+            "📐 Geometría", "📋 GDL", "🧮 Locales", "🌐 Globales", "📊 Matriz Particionada", "📉 Desplazamientos y Reacciones", "⚖️️ Equilibrio", "🎨 GRÁFICOS"
         ])
         
         with tab1:
@@ -468,7 +469,7 @@ elif st.session_state.pagina == 'ej_2':
         st.success("¡Cálculo estructural del Ejercicio 02 procesado con éxito!")
 
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-            "📐 Geometría", "📋 GDL", "🧮 Locales", "🌐 Globales", "📊 Matriz Particionada", "📉 Desplazamientos y Reacciones", "⚖️️ Equilibrio", "🎨 GRÁFICOS"
+            "📐 Geometría", "📋 GDL", "🧮 Locales", "🌐 Globales", "📊 Matriz Particionada", "📉 Desplazamientos y Reacciones", "⚖️ Equilibrio", "🎨 GRÁFICOS"
         ])
         
         with tab1:
@@ -543,7 +544,7 @@ elif st.session_state.pagina == 'ej_2':
                 st.dataframe(reac_oficial_2, hide_index=True, use_container_width=True)
                 
         with tab7:
-            st.subheader("⚖️ Equilibrio Estático y Fuerzas en Extremos de Elementos")
+            st.subheader("⚖️️ Equilibrio Estático y Fuerzas en Extremos de Elementos")
             fuerzas_oficiales_2 = pd.DataFrame({
                 "Barra": [1, 1, 2, 2, 3, 3, 4, 4, 5, 5],
                 "Nodo ID": ["1 (A)", "2 (B)", "6 (F)", "5 (E)", "3 (C)", "2 (B)", "2 (B)", "5 (E)", "5 (E)", "4 (D)"],
