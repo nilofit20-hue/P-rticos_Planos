@@ -19,7 +19,6 @@ st.markdown("""
         color: white !important; font-weight: bold !important; border-radius: 12px !important;
         height: 55px !important; width: 100% !important; border: 2px solid rgba(255,255,255,0.3) !important;
     }
-    /* Estilo para colorear celdas de matrices */
     table { font-size: 13px !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -108,7 +107,7 @@ elif st.session_state.pagina == 'ej_prueba':
             with col2: st.image("axial.jpg", use_container_width=True) if os.path.exists("axial.jpg") else st.warning("Falta axial.jpg")
 
 # ==========================================
-# VISTA: EJERCICIO 01 (Con todas las matrices detalladas y colores)
+# VISTA: EJERCICIO 01
 # ==========================================
 elif st.session_state.pagina == 'ej_1':
     if st.button("⬅️ Volver al Menú Principal"):
@@ -152,7 +151,6 @@ elif st.session_state.pagina == 'ej_1':
     st.markdown("---")
 
     if st.button("🚀 INICIAR CÁLCULO MATRICIAL - EJERCICIO 01", use_container_width=True):
-        # --- CÁLCULO RIGUROSO DE LAS MATRICES PARA EL EJERCICIO 01 ---
         nodos_clean = nodos_df.dropna(subset=["Nodo", "X (m)", "Y (m)"])
         barras_clean = barras_df.dropna(subset=["Barra", "Nodo_Ini", "Nodo_Fin"])
         
@@ -223,7 +221,7 @@ elif st.session_state.pagina == 'ej_1':
         st.balloons()
         st.success("¡Cálculo estructural del Ejercicio 01 procesado con éxito!")
 
-        # --- 8 PESTAÑAS MODULARES CON ETIQUETAS Y COLORES ---
+        # --- 8 PESTAÑAS MODULARES ---
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
             "📐 Geometría y Elementos", 
             "📋 Partición de GDL", 
@@ -275,15 +273,9 @@ elif st.session_state.pagina == 'ej_1':
 
         with tab5:
             st.subheader("📊 Matriz de Rigidez Global de la Estructura (Ensamblada)")
-            st.markdown("Matriz de rigidez global del sistema de 12x12. Separada por bloques estructurales:")
-            
-            # Aplicar formato condicional de colores para distinguir bloques
-            def color_blocks(val):
-                color = '#1e293b' if abs(val) < 0.001 else ('#0284c7' if val > 0 else '#0369a1')
-                return f'background-color: {color}; color: white;'
-
+            st.markdown("Matriz de rigidez global del sistema de 12x12:")
             df_K_global = pd.DataFrame(np.round(K_global, 2))
-            st.dataframe(df_K_global.style.applymap(color_blocks), use_container_width=True)
+            st.dataframe(df_K_global, use_container_width=True)
 
         with tab6:
             st.subheader("📉 Desplazamientos Nodales y Reacciones (Resultados Oficiales EngiLab)")
