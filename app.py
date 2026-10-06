@@ -35,7 +35,7 @@ nodos_default = pd.DataFrame({
     "Restringido_Y": [True, False, True],
     "Restringido_Giro": [False, False, True]
 })
-nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v18", use_container_width=True)
+nodos_df = st.data_editor(nodos_default, num_rows="dynamic", key="nodos_portico_v19", use_container_width=True)
 
 # --- ENTRADA DE DATOS: BARRAS ---
 st.subheader("🔗 Conectividad y Propiedades de Elementos")
@@ -47,7 +47,7 @@ barras_default = pd.DataFrame({
     "Altura (m)": [0.40, 0.35],
     "E (Tn/m2)": [1900000.0, 1900000.0]
 })
-barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v18", use_container_width=True)
+barras_df = st.data_editor(barras_default, num_rows="dynamic", key="barras_portico_v19", use_container_width=True)
 
 # --- CARGAS DISTRIBUIDAS ---
 st.subheader("⚡ Cargas Distribuidas en los Elementos (w en Tn/m)")
@@ -55,7 +55,7 @@ cargas_default = pd.DataFrame({
     "Barra": [1, 2],
     "w (Tn/m)": [1.0, 3.0]
 })
-cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v18", use_container_width=True)
+cargas_df = st.data_editor(cargas_default, num_rows="dynamic", key="cargas_portico_v19", use_container_width=True)
 
 st.markdown("---")
 
@@ -156,7 +156,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
                 F_equivalente_global[gdl_elem[i]] += Fe_global[i]
                 
             elementos_info.append({
-                "Barra": b_id, "N1": n1_id, "N2": n2_id, "L": L, "w": w_val
+                "Barra": b_id, "N1": n1_id, "N2": n2_id, "L": L, "w": w_val, "gdl": gdl_elem
             })
 
         # --- RESOLUCIÓN MATRICIAL ---
@@ -222,7 +222,7 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             })
 
         st.balloons()
-        st.success("¡Cálculo matricial y resultados procesados con éxito!")
+        st.success("¡Cálculo matricial procesado con éxito!")
 
         tab1, tab2, tab3, tab4 = st.tabs([
             "📉 Desplazamientos", "⚖️ Reacciones", "🔗 Fuerzas Internas", "🎨 GRÁFICOS"
@@ -265,7 +265,6 @@ if st.button("🚀 INICIAR CÁLCULO MATRICIAL DEL PÓRTICO", use_container_width
             
             if uploaded_files:
                 st.markdown("---")
-                # Mostrarlas en columnas de 2 para que se vea estético y ordenado
                 cols = st.columns(2)
                 for index, uploaded_file in enumerate(uploaded_files):
                     with cols[index % 2]:
